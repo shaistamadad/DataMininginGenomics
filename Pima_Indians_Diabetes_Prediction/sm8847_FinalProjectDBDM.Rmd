@@ -1,0 +1,1402 @@
+---
+title: "DBBM Final Project"
+author: "shaistamadad"
+date: "5/15/2020"
+output: html_document
+---
+
+## Read in the dataset
+
+```{r}
+library(readr)
+PimaIndiansDiabetes <- read_csv("PimaIndiansDiabetes.csv")
+head(PimaIndiansDiabetes)
+```
+
+```{r}
+str(PimaIndiansDiabetes)
+```
+
+
+#Q1: Which variables are numeric and which are categorical? Explain why. (20pts)
+##Make sure to convert the variables to the correct type.
+
+Let's start with the definition of a numeric and categorical variables. 
+Numeric variables are  variables  whose value  can either be counted or measured.
+A numeric variable can be either continuous (where the value is measured) or discrete, where the value is being counted. 
+A continuous numeric variable, in theory, could take any value in an interval, however this is limited by the precision of the measuring instrument.  A discrete quantitative variable can  take specific numeric values (rather than any value in an interval), but those numeric values have a clear quantitative
+interpretation. Examples of discrete quantitative variables is the number of pregnancies (i.e., it is not possible to have 1.5 pregnancies). 
+
+In contrast, categorical variables  take on values in one of K different classes, or categories. Each observation can be placed in only one category, and the categories are mutually exclusive. Examples of catergorical class variables include a person’s gender (male or female); stages of cancer (benign, maligant)
+
+Pregnancies: The number of pregancies can be counted and it takes a discrete set of values (0,1 2), there can't be 1.2 pregnancies. Hence this is a discrete numeric variable. 
+
+Glucose: Plasma glucose concentration a 2 hours in an oral glucose tolerance test : continuous numeric variable which can take any value in an interval.
+
+
+
+BloodPressure: Diastolic blood pressure (mm Hg): continous numeric variable which is measured and can take on any value in an interval but is limited by the measuring instrument sphygmomanometer's accuracy. 
+
+
+SkinThickness: Triceps skin fold thickness (mm) : continous numeric as it is measured 
+
+
+Insulin: 2-Hour serum insulin (mu U/ml) : continous numeric as it is measured 
+
+
+BMI: Body mass index (weight in kg/(height in m)^2): continouse numeric as it is measured 
+
+
+DiabetesPedigreeFunction: Diabetes pedigree function : numeric as it is calculated based on a patient's family  history of diabetes. 
+Diabetes Pedigree Function is function that represents how likely they are to get the disease by extrapolating from their ancestor’s history. The values in the DPF column shows a range of values, hence this is a continous numeric variable 
+
+
+Age: Age (years): numeric. There can be some debate about whether to classify age as discrete or continous numeric. If the decimals in age are use to represent the months and days of year, age can potentially be a continous numeric variable, however,since there are no decimal points in age here, I will take age as a dicrete numeric variable.
+
+
+Outcome: Class variable (0 or 1)" : categorical variable as the outcome is classified into one of two categories: 0 representing not diabetic, and 1 presenting diabetic. 
+I will further classify this as a nominal categorical variable as outcome belongs one of two categories. 
+
+##Convert outcome from numeric to categorical, the rest of the variables are correctly classified as numeric  
+
+```{r}
+PimaIndiansDiabetes$Outcome= as.factor(PimaIndiansDiabetes$Outcome)
+#PimaIndiansDiabetes$Pregnancies= as.factor(PimaIndiansDiabetes$Pregnancies)
+```
+
+
+```{r}
+str(PimaIndiansDiabetes)
+```
+
+
+
+
+```{r}
+head(PimaIndiansDiabetes)
+```
+
+
+
+##There are 500 rows which have no diabetes outcome in the data, and 268 rows which have diabetes outcome in the data 
+
+```{r}
+table(PimaIndiansDiabetes$Outcome)
+```
+
+
+
+#Q2: Use appropriate statistical analysis to determine which of the variables ( on their own ) are most helpful in predicting the outcome? (20pts)
+##For each variable draw an appropriate graph ( boxplot for numerical values and barplot for categorical values). Explain your answer.
+
+## I will use three different statistical analysis methods to check which of the 8 variables are most helpful in predicting the outcome on their own: 
+1) Information Gain 
+2) Boxplots (as all variables are numeric, no barplots are needed)
+3) correlation matrix with pearson correlation score between each variable and the outcome to see which variable has the highest correlation score. 
+Using these three different methods, I will create a rank from top to bottom for the variables. The ones at the top are most helpful in predicting the outcome on their own, and the ones at the bottom are the least helpful. 
+
+##1) Information Gain 
+Information gain calculates the reduction in entropy or surprise from transforming a dataset in some way.Information gain is generally used to create decision trees. This is because a decision tree starts with a variable which has the highest information gain. For each node of the tree, the information value measures how much information a feature gives us about the outcome. The split with the highest information gain will be taken as the first split and the process will continue until all children nodes are pure, or until the information gain is 0.Information gain can also be used for feature selection, by evaluating the gain of each variable in the context of the target variable (which is the outcome in this case).
+
+
+```{r}
+library(CORElearn) # need this package to calculate the information gain 
+```
+
+
+```{r}
+Information_Gain1= attrEval(Outcome~.,
+              data=PimaIndiansDiabetes, estimator = "InfGain")
+Information_Gain1
+```
+
+
+```{r}
+IG_FD=data.frame(Information_Gain1)
+IG_FD$Information_Gain1= as.numeric(IG_FD$Information_Gain1)
+rownames(IG_FD)
+```
+Let's plot a bar plot to visualise this information 
+
+```{r}
+library(ggplot2)
+# Basic barplot
+p<-ggplot(data=IG_FD, aes(x=row.names(IG_FD), y=Information_Gain1)) +
+  geom_bar(stat="identity")
+p
+```
+
+## Conclusion from Information Gain 
+Best Variable is Glucose; worse is blood pressure, glucose has highest information gain, and blood pressure has the lowest 
+```{r}
+IG_FD
+```
+
+Ranking: Glucose, BMI, Age, Pregancies, Insulin, Pedigree Function,skin thickess and last is blood pressure. Makes sense as evident from the next part of this assignment (bp has the most missing values, maybe that's why has low prediction power)
+
+
+## Box plots
+
+```{r}
+library(gridExtra) # for arranging boxplots in a row to make visualisation and comparison easier 
+library(ggplot2)
+Pregnancy= ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=Pregnancies)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+```{r}
+Glucose=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=Glucose)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+```{r}
+grid.arrange(Pregnancy, Glucose, nrow = 2)
+```
+The means for diabetes and no diabetes prediction are separated in pregnancy, higher median pregancies in diabetes positive outcome, although, the upper quartile of no diabetes overlaps a lot with the lower and upper quartiles of diabetes positive boxplot. 
+
+Glucose shows a very clear separation of median scores between the 1 and 0 predicitioons. Higher levels in prediction=1. Also note the very little overlap between th lower quartile of prediction=1 and upper quartile of prediction = 0
+
+
+```{r}
+BloodPressure=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=BloodPressure)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+```{r}
+SkinThickness=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=SkinThickness)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+```{r}
+Insulin=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=Insulin)) + 
+  geom_boxplot(notch=FALSE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+```{r}
+BMI=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=BMI)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+```{r}
+grid.arrange(BloodPressure,SkinThickness,Insulin,BMI, nrow = 2)
+```
+Blood pressure: medians for the two outcomes are very near each other, with a lot of overlap between the upper and lower quantiles and lots of outliers. Hence, BP is not a good predictor on its own. The medians and upper and lower quantiles for skin thickness are also very close for the two outcomes. So, skin thickness is also not a good variable in terms of prediction powerr. Insulin is also not a good predicor, eve though the median for prediction= 1 is lower, the upper quantile of the prediction=1 is very wide and overlaps with the upper and lower quantiles of prediction=0, also note that high number of outliers. The mdain of BMI is higher for prediction=1, BMI is a decent predictor, compared to the other variables. 
+
+
+
+```{r}
+DPF=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=DiabetesPedigreeFunction)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+```{r}
+Age=ggplot(PimaIndiansDiabetes, aes(x=Outcome, y=Age)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+```{r}
+grid.arrange(DPF,Age, nrow = 2)
+```
+The median for prediction=1 is higher in the DPF boxplor, although the interquartile ranges do overlap. Age shows a clear separation of median: higher median when prediction=1. 
+
+
+# Conclusion based on boxplots 
+Glucose is most accurate in predicting by itself because it has the least overlap between the inter-quantile range in the diabetes(1) and no diabetes (0) conditions, which gives the highest confidence fot this variable out of the eight that the medians differ between the two conditions (diabetes and no diabetes). Glucose also has the one of the least number of outliers. Pregnancies,BMI, Age are also good predictors. DPF is moderate. Insulin, skin thickness, and blood pressure are not good in predicting the outcome on their own. 
+
+
+##  Analysis Method 3: Correlation Heatmap 
+
+
+Note: Reference: Code taken and adapted from the following source: http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
+
+
+```{r}
+Correlation.data= PimaIndiansDiabetes
+Correlation.data$Outcome= as.numeric(Correlation.data$Outcome)
+cormat <- round(cor(Correlation.data),2)
+head(cormat)
+```
+
+
+```{r}
+library(reshape2)
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+```
+
+```{r}
+library(ggplot2)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+```
+```{r}
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+  # Get upper triangle of the correlation matrix
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+```
+
+
+```{r}
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+```
+
+```{r}
+# Melt the correlation matrix
+library(reshape2)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Heatmap
+library(ggplot2)
+ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Pearson\nCorrelation") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+```
+
+```{r}
+reorder_cormat <- function(cormat){
+# Use correlation between variables as distance
+dd <- as.dist((1-cormat)/2)
+hc <- hclust(dd)
+cormat <-cormat[hc$order, hc$order]
+}
+```
+
+
+```{r}
+# Reorder the correlation matrix
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+    name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+# Print the heatmap
+print(ggheatmap)
+```
+```{r}
+ggheatmap + 
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+theme(
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.border = element_blank(),
+  panel.background = element_blank(),
+  axis.ticks = element_blank(),
+  legend.justification = c(1, 0),
+  legend.position = c(0.6, 0.7),
+  legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 2,
+                title.position = "top", title.hjust = 5))
+```
+
+
+## Analysis of the pearson  correlation co-efficients between outcome and the variables: (and ranking of variables from best to worst explanatory prediction power)
+Outcome and Glucose=0.47
+Outcome and BMI= 0.290
+Outcome and Age=0.240
+Outcome and Pregnancy: 0.22
+Outcome and DPF= 0.17
+Outcome and Insulin= 0.13
+Outcome and Skin Thickness= 0.07
+Outcome and BP= 0.07
+
+
+#Q3: Are there any missing values? and how do we fix this ? (20pts)
+##Notice that some of the values are missing and replaced with 0. For example a blood pressure of 0 doesn’t  make sense and it can have an impact on the models. So how do we identify which 0 reoresents the value 0 and which represents NA? Explain your answer.
+
+
+```{r}
+pima <- PimaIndiansDiabetes[complete.cases(PimaIndiansDiabetes),] 
+dim(pima)
+```
+
+There seem to be no NAs in any of the rows, as the dimensions remain the same after filtering the data for complete cases only. However,there were 0's for BloodPressure, SkinThickness, Insulin, BMI, Glucose and Pregancies, and outcome. The 0s for outcome and pregancies make sense. 0 in outcome represents no diabetes, whereas 0 in pregnancies alos makes sense as a woman can be diabetic while having no pregnancy history. 0 for the rest do not make sense. BMI can't be zero, neither can skin thickness, insulin levels can't be zero (don't represent the physiological range)
+
+There are three ways to deal with missing values: 
+1) Omit all rows with  missing values (I have done this). The downside to this is that we lose a lot of missing data which can be usefu. In this case, blood pressure and skin thickness have a large number of nas. skipping these rows means losing more than half the data, this means losing the data from the other more useful variables such as glucose which has only 5 missing value. ANother solution is to delete the variables with the most missing values, i.e., skin thickness and blood pressure in this case. 
+2) Another method is to impute the NAs, i.e., replace the missing values with the mean/median of the entire column (for continous variables) and the most frequenct category for categorical variables. If the variation is low or if the variable has low leverage over the response, such a rough approximation is acceptable and could possibly give satisfactory results.
+
+3) prediciton for missing values using knn or randomforest. DMwR::knnImputation function can be used.  it identifies ‘k’ closest observations based on the euclidean distance and computes the weighted average (weighted based on distance) of these ‘k’ obs.
+
+
+I have fixed the NAs using methods 1 and 2. I used the imputed dataframe for choosing my model, as getting rid of all NAs reduced the dataset quite drastically. 
+
+```{r}
+PimaIndiansDiabetes1= PimaIndiansDiabetes[,c(2:8)]  #variables which need to be imputed 
+head(PimaIndiansDiabetes1)
+```
+
+
+```{r}
+PimaIndiansDiabetes1[PimaIndiansDiabetes1 == 0] <- NA  # change all 0s to NAs .
+head(PimaIndiansDiabetes1)
+```
+
+## Check if code actually worke and 0s are replaced with NA 
+
+```{r}
+# Return the column names containing missing observations
+list_na <- colnames(PimaIndiansDiabetes1)[ apply(PimaIndiansDiabetes1, 2, anyNA) ]
+list_na
+```
+
+## Summary of total number of missing data for each variable 
+
+```{r}
+summary(PimaIndiansDiabetes1$Glucose)
+```
+
+
+```{r}
+summary(PimaIndiansDiabetes1$BloodPressure)
+```
+
+
+
+```{r}
+summary(PimaIndiansDiabetes1$SkinThickness)
+```
+
+
+```{r}
+summary(PimaIndiansDiabetes1$Insulin)
+```
+
+
+
+```{r}
+summary(PimaIndiansDiabetes1$BMI)
+```
+
+
+```{r}
+summary(PimaIndiansDiabetes1$DiabetesPedigreeFunction) # no missing values 
+```
+
+
+
+```{r}
+summary(PimaIndiansDiabetes1$Age) # no missing values 
+```
+
+
+
+# Method 1: getting rid of NA value rows 
+
+```{r}
+Data_Clean1= cbind(PimaIndiansDiabetes$Pregnancies,PimaIndiansDiabetes1,PimaIndiansDiabetes$Outcome)
+Data_Clean1_Final= na.omit(Data_Clean1)
+dim(Data_Clean1_Final)
+```
+## after omitting all the rows with NAs,only 392 left.
+
+## Can also use dplyr to omit the rows 
+
+```{r}
+library(dplyr)
+# Exclude the missing observations
+PimaIndiansDiabetes1_drop <-Data_Clean1 %>%
+na.omit()		
+colnames(PimaIndiansDiabetes1_drop)= colnames(PimaIndiansDiabetes)
+dim(PimaIndiansDiabetes1_drop)
+```
+
+
+#Final Data with all NA values omitted 
+
+```{r}
+str(PimaIndiansDiabetes1_drop)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Method 2: Impute Values 
+
+
+
+```{r}
+PimaIndiansDiabetes1_Means<- colMeans(PimaIndiansDiabetes1[,1:7], na.rm=TRUE) # calculate means for imputing 
+PimaIndiansDiabetes1_Means
+```
+
+
+```{r}
+average_missing <- apply(PimaIndiansDiabetes1[,colnames(PimaIndiansDiabetes1) %in% list_na],
+      2,
+      mean,
+      na.rm =  TRUE)
+average_missing
+```
+
+
+```{r}
+sum(is.na(PimaIndiansDiabetes1$Glucose))
+```
+
+
+```{r}
+sum(is.na(PimaIndiansDiabetes1$BloodPressure))
+```
+
+
+```{r}
+sum(is.na(PimaIndiansDiabetes1$SkinThickness))
+```
+
+
+```{r}
+sum(is.na(PimaIndiansDiabetes1$Insulin))
+```
+
+
+```{r}
+sum(is.na(PimaIndiansDiabetes1$BMI))
+```
+
+```{r}
+colnames(PimaIndiansDiabetes1)
+```
+
+
+
+```{r}
+PimaIndiansDiabetes1_replace <- PimaIndiansDiabetes1 %>%
+   mutate(replace_mean_glucose  = ifelse(is.na(Glucose), average_missing[1], Glucose),
+   replace_mean_bloodpressure = ifelse(is.na(BloodPressure), average_missing[2], BloodPressure),
+   replace_mean_skinthickness = ifelse(is.na(SkinThickness), average_missing[3], SkinThickness),
+   replace_mean_Insulin = ifelse(is.na(Insulin), average_missing[4], Insulin),
+   replace_mean_bmi= ifelse(is.na(BMI), average_missing[5], BMI)
+   )
+```
+
+```{r}
+PimaIndiansDiabetes_Imputed= cbind(PimaIndiansDiabetes$Pregnancies, PimaIndiansDiabetes1_replace[,c(8:12)], PimaIndiansDiabetes[,c(7:9)])
+```
+
+```{r}
+colnames(PimaIndiansDiabetes_Imputed)= colnames(PimaIndiansDiabetes)
+head(PimaIndiansDiabetes_Imputed)
+```
+
+## I realsied later a more efficient way to impute would have been to use the impute function from Hmisc package, but I had used the method above so decided to use the imputed data using the method above. 
+
+library(Hmisc)
+impute(PimaIndiansDiabetes1$BloodPressure, mean)  # replace with mean
+impute(PimaIndiansDiabetes1$BloodPressure, median)
+
+Do this for all five columns with the missing values. 
+
+# Method 2 for imputing 
+
+```{r}
+PimaIndiansDiabetes1_impute_mean <- data.frame(
+    sapply(
+        PimaIndiansDiabetes1,
+        function(x) ifelse(is.na(x),
+            mean(x, na.rm = TRUE),
+            x)))  # apply mean for all values if it is an NA, otherwise skip
+```
+
+
+```{r}
+PimaIndiansDiabetes1_impute_mean2= cbind(PimaIndiansDiabetes$Pregnancies, PimaIndiansDiabetes1_impute_mean, PimaIndiansDiabetes$Outcome)  # get the final imputed dataframe by binding the pregnancies and outcome columns which did not need to be impyed 
+```
+
+
+```{r}
+colnames(PimaIndiansDiabetes1_impute_mean2)= colnames(PimaIndiansDiabetes)
+head(PimaIndiansDiabetes1_impute_mean2)
+```
+
+Need to get rid of the extra decimal places 
+
+
+```{r}
+PimaIndiansDiabetes1_impute_mean2$Glucose= round(PimaIndiansDiabetes1_impute_mean2$Glucose)
+PimaIndiansDiabetes1_impute_mean2$BloodPressure= round(PimaIndiansDiabetes1_impute_mean2$BloodPressure)
+PimaIndiansDiabetes1_impute_mean2$SkinThickness=round (PimaIndiansDiabetes1_impute_mean2$SkinThickness)
+PimaIndiansDiabetes1_impute_mean2$Insulin= round(PimaIndiansDiabetes1_impute_mean2$Insulin)
+PimaIndiansDiabetes1_impute_mean2$BMI= round(PimaIndiansDiabetes1_impute_mean2$BMI,digits = 1)
+head(PimaIndiansDiabetes1_impute_mean2)
+```
+
+#Final Imputed Data which I used in subsequenct analysis is PimaIndiansDiabetes1_impute_mean2
+
+```{r}
+str(PimaIndiansDiabetes1_impute_mean2)
+```
+
+
+
+###############
+#Q4: Building the Model (20pts) · You are free to use either : leave out 30% or 10xfold Cross Validation for your testing purpose.
+##· You may pick any of the following to perform your modeling ( randomForest, SVM, KNN, or neural nets) · Explain your approach ( for example, if you are only picking one, why did you pick it? if you are going to do all, how will you decide which is best?)
+
+I used the 30% leave out method. I also balanced my dataframe. This is because the number of 0 diagnosis = 500, and diabetic diagnosis is 268. This means there is a bias towards a no diabetes prediction by sheer number of the number of no diabetes rows. 
+
+## Balancing the Dataset 
+
+```{r}
+table(PimaIndiansDiabetes1_impute_mean2[,"Outcome"]) 
+```
+
+
+```{r}
+set.seed(1) # before sampling so that I get this result when I knit the file 
+allZeros<-PimaIndiansDiabetes1_impute_mean2[which(PimaIndiansDiabetes1_impute_mean2[,"Outcome"] == '0'),] # choose all the data with not diabetic diagnosis 
+allOnes<-PimaIndiansDiabetes1_impute_mean2[which(PimaIndiansDiabetes1_impute_mean2[,"Outcome"] == '1'),]   # choose all the data with diabetec diagnosis 
+set.seed(109)
+sample(1:nrow(allZeros), nrow(allOnes))->rand.0  # sample from the allZeros vector number of variables = 268, which is the number of not diabetic data points 
+allZeros[rand.0,]->zero # 268 not diabetic data points
+```
+
+
+
+
+
+```{r}
+set.seed(2)
+training.ones<-sample(nrow(allOnes), floor(nrow(allOnes) * 0.7), replace = FALSE) #choose 70 percent of the 268 diabetic points
+set.seed(3)
+training.zeros= sample(nrow(zero), floor(nrow(zero) * 0.7), replace = FALSE) #choose 70 percent of the not diabetic points 
+
+training_set_balanced_ones<-allOnes[training.ones,] # 70 percent diabetic points for training set 
+
+test_set_balanced_ones<-allOnes[-training.ones,] # 30 percent chosen as test dataset 
+
+training_set_balanced_zeros<-zero[training.zeros,] # 70 percent zeros for training set
+
+test_set_balanced_zeros<-zero[-training.zeros,] # 30 percent chosen as test dataset 
+```
+
+
+#Final Balanced Training and Tests
+
+```{r}
+training_set_balanced= rbind(training_set_balanced_ones, training_set_balanced_zeros)
+test_set_balanced= rbind(test_set_balanced_ones, test_set_balanced_zeros)
+```
+
+```{r}
+table(test_set_balanced[,"Outcome"]) # balanced test dataset 
+```
+
+```{r}
+table(training_set_balanced[,"Outcome"]) # balanced training dataset 
+```
+
+
+# Unbalanced Training and Test Sets to compare if there is  a difference when using balanced versus unbalanced data 
+
+```{r}
+set.seed(4)
+training.ones1<-sample(nrow(allOnes), floor(nrow(allOnes) * 0.7), replace = FALSE) #choose 70 percent of the 268 diabetic points
+set.seed(5)
+training.zeros1= sample(nrow(allZeros), floor(nrow(allZeros) * 0.7), replace = FALSE) #choose 70 percent of all not diabetic points 
+
+training_set_unbalanced_ones<-allOnes[training.ones1,] # 70 percent diabetic points for training set 
+
+test_set_unbalanced_ones<-allOnes[-training.ones1,] # 30 percent chosen as test dataset 
+
+training_set_unbalanced_zeros<-allZeros[training.zeros1,] # 70 percent zeros for training set
+
+test_set_unbalanced_zeros<- allZeros[-training.zeros1,] # 30 percent chosen as test dataset 
+```
+
+
+
+```{r}
+training_set_unbalanced= rbind(training_set_unbalanced_ones, training_set_unbalanced_zeros)
+test_set_unbalanced= rbind(test_set_unbalanced_ones, test_set_unbalanced_zeros)
+```
+
+```{r}
+table(test_set_unbalanced[,"Outcome"])
+```
+
+```{r}
+table(training_set_unbalanced[,"Outcome"])
+```
+
+#1) Neural Network Model 
+
+```{r}
+Dataset.NM= PimaIndiansDiabetes1_impute_mean2  # make a copy of the imputed datset as this datset needs to be scaled for neural model 
+str(Dataset.NM)
+```
+
+
+```{r}
+maxs = apply(Dataset.NM[,1:8], 2, max)
+mins = apply(Dataset.NM[,1:8], 2, min)
+scaled.data = as.data.frame(scale(Dataset.NM[,1:8],
+                                  center=mins,
+                                  scale = maxs-mins))
+
+Outcome= as.numeric(Dataset.NM$Outcome)-1
+
+scaled.data.df = cbind(Outcome,scaled.data)
+```
+
+
+```{r}
+set.seed(123) # setting seed after every sampling to get consistent results 
+allZeros1<-scaled.data.df[which(scaled.data.df[,"Outcome"] == "0"),] # choose all the data with no diabetes diagnosis 
+set.seed(7888)
+allOnes1<-scaled.data.df[which(scaled.data.df[,"Outcome"] == "1"),]   # choose all the data with diabetes diagnosis 
+set.seed(888)
+sample(1:nrow(allZeros1), nrow(allOnes1))->rand.01  # sample from the allZeros vector number of variables = 268, which is the number of not diabetic data points 
+allZeros1[rand.01,]->zero1 # 268 not diabetic data points
+```
+
+
+
+```{r}
+set.seed(222)
+Training.ones1<-sample(nrow(allOnes1), floor(nrow(allOnes1) * 0.7), replace = FALSE) #choose 70 percent of the 268 diabetic points
+set.seed(322)
+Training.zeros1= sample(nrow(zero1), floor(nrow(zero1) * 0.7), replace = FALSE) #choose 70 percent of the not diabetic points 
+
+training_set_balanced_ones1<-allOnes1[Training.ones1,] # 70 percent diabetic points for training set 
+
+test_set_balanced_ones1<-allOnes1[-Training.ones1,] # 30 percent chosen as test dataset 
+
+training_set_balanced_zeros1<-zero1[Training.zeros1,] # 70 percent zeros for training set
+
+test_set_balanced_zeros1<-zero1[-Training.zeros1,] # 30 percent chosen as test dataset 
+```
+
+
+
+
+#Final Balanced Training and Tests for neural network modeling 
+
+```{r}
+training_set_balanced_NM= rbind(training_set_balanced_ones1, training_set_balanced_zeros1)
+test_set_balanced_NM= rbind(test_set_balanced_ones1, test_set_balanced_zeros1)
+```
+
+
+```{r}
+table(training_set_balanced_NM[,"Outcome"])
+```
+
+
+```{r}
+table(test_set_balanced_NM[,"Outcome"])
+```
+
+
+```{r}
+set.seed(2222)
+library("neuralnet")
+```
+
+```{r}
+library(AUC)
+get_NN_AUC <- function(n){
+
+#training_set_balanced1$diagnosis= as.factor(training_set_balanced1$diagnosis)
+#test_set_balanced1$diagnosis= as.factor(test_set_balanced1$diagnosis)
+
+  
+data.nn = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(n), rep=1, linear.output = F)
+data.nn.results =compute(data.nn, test_set_balanced_NM[,2:9])
+#print()
+#training_set_balanced$diagnosis <- ifelse(training_set_balanced$diagnosis =="M",1,0)
+#test_set_balanced$diagnosis= ifelse(test_set_balanced$diagnosis =="M",1,0)
+data.nn.roc = roc(data.nn.results$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+return(auc(data.nn.roc))
+}
+```
+
+
+## I calculated the aucs for the test sets for my neural model while varying the number of nodes from 0 to 
+
+```{r}
+set.seed(777)
+out= matrix( nrow=1, ncol=30)
+for (i in c(1:30)){
+  rownames(out)= c("AUC")
+  colnames(out)= c(1:30) 
+  #auc= get_NN_AUC(i)
+out[,i]= get_NN_AUC(i)
+}
+```
+
+
+```{r}
+out
+```
+
+
+```{r}
+which.max(out) # to find the higest auc score 
+```
+
+```{r}
+out[1] # this is the best auc score, when hidden= c(1)
+```
+
+
+Best model parameters with neural network is 
+neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1), rep=1, linear.output = F)
+AUC for test data prediction was  0.7977442
+
+
+
+
+## Once I got the number of nodes which gave best auc score, I used this number of nodes (1) as constant and changed th number of hidden layers from 1 to 7 to see which gave me the best score. 
+
+# Since hidden= c(1) gave the best auc when hidden layers=1, let's try different number of hidden layers with nodes=1
+
+## when layers=2
+
+```{r}
+set.seed(11)
+data.nn = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1), rep=1, linear.output = F)
+data.nn.results =compute(data.nn, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc = roc(data.nn.results$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc))
+```
+auc= 0.7983539; this score is almost the same as when number of layers= 1 (0.7977442)
+
+##When hidden layers= 3
+
+
+
+```{r}
+set.seed(333)
+data.nn.3 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1,1), rep=1, linear.output = F)
+data.nn.results.3 =compute(data.nn.3, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc.3 = roc(data.nn.results.3$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc.3))
+```
+
+auc = 0.7980491
+Lower than when layers= 2 auc= 0.7983539
+
+##When hidden layers= 4
+
+
+
+```{r}
+set.seed(444)
+data.nn.4 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1,1,1), rep=1, linear.output = F)
+data.nn.results.4 =compute(data.nn.4, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc.4 = roc(data.nn.results.4$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc.4))
+```
+
+Auc =0.7982015, lower than wehn layers= 2 auc= 0.7983539
+
+
+
+
+##When hidden layers= 5
+
+
+
+```{r}
+set.seed(555)
+data.nn.5 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1,1,1,1), rep=1, linear.output = F)
+data.nn.results.5 =compute(data.nn.5, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc.5 = roc(data.nn.results.5$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc.5))
+```
+AUC= 0.7556775, lower than when when layers= 2 auc= 0.7983539
+
+
+
+##When hidden layers= 6
+
+
+
+```{r}
+set.seed(666)
+data.nn.6 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1,1,1,1,1), rep=1, linear.output = F)
+data.nn.results.6 =compute(data.nn.6, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc.6 = roc(data.nn.results.6$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc.6))
+```
+
+AUC= 0.7655845, lower than when when layers= 2 auc= 0.7983539
+
+
+##When hidden layers= 7
+
+
+
+```{r}
+set.seed(777)
+data.nn.7 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1,1,1,1,1,1), rep=1, linear.output = F)
+data.nn.results.7 =compute(data.nn.7, test_set_balanced_NM[,2:9])
+#print()
+data.nn.roc.7 = roc(data.nn.results.7$net.result,as.factor(test_set_balanced_NM$Outcome))
+
+(auc(data.nn.roc.7))
+```
+
+AUC=0.774577, lower than when when layers= 2 auc= 0.7983539
+
+
+
+
+
+
+
+
+
+
+```{r}
+set.seed(10)
+data.nn.10 = neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(10,10,10,10), rep=5, linear.output = F)
+data.nn.results.10 =compute(data.nn.10, test_set_balanced_NM[,2:9])
+#print()
+#training_set_balanced$diagnosis <- ifelse(training_set_balanced$diagnosis =="M",1,0)
+#test_set_balanced$diagnosis= ifelse(test_set_balanced$diagnosis =="M",1,0)
+data.nn.roc.10 = roc(data.nn.results.10$net.result,as.factor(test_set_balanced_NM$Outcome))
+(auc(data.nn.roc.10))
+```
+
+## Conclusion from Neural Network
+The best model is neuralnet(Outcome~., data=training_set_balanced_NM, hidden=c(1,1), rep=1, linear.output = F)
+AUC for test data prediction was auc= 0.7983539
+
+
+# SVM Model 
+
+the svum.tune function helps find the best model. I varied the cost from 1 to 20 in intervals of 0.1 to see which gave the best auc score on the test set, using both unbalanced and balanced datasets.
+
+```{r}
+library(e1071)
+set.seed(444)
+
+SVM_AUC <- function(training_set_balanced, test_set_balanced){
+# SCALE ALL NUMERIC COLUMNS 
+  training_set_balanced$Pregnancies= scale(training_set_balanced$Pregnancies)
+  training_set_balanced$Glucose= scale(training_set_balanced$Glucose)
+  training_set_balanced$BloodPressure= scale(training_set_balanced$BloodPressure)
+  training_set_balanced$SkinThickness= scale(training_set_balanced$SkinThickness)
+  training_set_balanced$Insulin= scale(training_set_balanced$Insulin)
+  training_set_balanced$BMI= scale(training_set_balanced$BMI)
+  training_set_balanced$DiabetesPedigreeFunction= scale(training_set_balanced$DiabetesPedigreeFunction)
+  training_set_balanced$Age= scale(training_set_balanced$Age)
+  
+  test_set_balanced$Pregnancies= scale(test_set_balanced$Pregnancies)
+  test_set_balanced$Glucose= scale(test_set_balanced$Glucose)
+  test_set_balanced$BloodPressure= scale(test_set_balanced$BloodPressure)
+  test_set_balanced$SkinThickness= scale(test_set_balanced$SkinThickness)
+  test_set_balanced$Insulin= scale(test_set_balanced$Insulin)
+  test_set_balanced$BMI= scale(test_set_balanced$BMI)
+  test_set_balanced$DiabetesPedigreeFunction= scale(test_set_balanced$DiabetesPedigreeFunction)
+  test_set_balanced$Age= scale(test_set_balanced$Age)
+  
+                                   
+
+
+svm <- tune.svm(Outcome~., data = training_set_balanced, kernal = "linear",cost=seq(from=0.1, to=20,by=0.1), probability = T)
+print(svm$best.model) # the best model from costs 0.1 to 20 
+
+svm.prob <- predict(svm$best.model, test_set_balanced[,1:8],probability=T)
+#print(svm.prob)
+prob <- attr(svm.prob,"probabilities")[,"1"]
+return(auc(roc(prob, test_set_balanced$Outcome)))
+}
+
+
+SVM_AUC(training_set_balanced= training_set_balanced , test_set_balanced = test_set_balanced)
+
+```
+
+so, with svm (for the balanced data) using a cost of 1.9 and kernel= radial, I get an AUC score of  0.8257888 which is higher than the AUC score for the best model of neural network  0.7983539 
+
+## Let's see how the unbalanced data compares 
+
+```{r}
+str(training_set_unbalanced)
+```
+
+```{r}
+str(test_set_unbalanced)
+```
+
+
+```{r}
+set.seed(234)
+SVM_AUC(training_set_unbalanced, test_set_unbalanced)
+```
+
+so, the best model with svm (for the unbalanced data) using a cost of 8.3  and kernel= radial, I get an AUC score of0.7988477which is lower than the AUC score for the balanced data. 
+
+
+Another way to change the cost and finding the best auc, while keepin the kernel constant at linear (the svm.tune also changes the kernel )
+
+```{r}
+SVM_AUC= function(training_set_balanced, test_set_balanced,n){
+  out<-matrix(data=NA, nrow = 1, ncol = n)  # matrix to be filled with auc scores 
+  rownames(out)<-c("AUC")
+  colnames(out) = c(1:n)
+   training_set_balanced$Pregnancies= scale(training_set_balanced$Pregnancies) # scale all numeric variable
+  training_set_balanced$Glucose= scale(training_set_balanced$Glucose)
+  training_set_balanced$BloodPressure= scale(training_set_balanced$BloodPressure)
+  training_set_balanced$SkinThickness= scale(training_set_balanced$SkinThickness)
+  training_set_balanced$Insulin= scale(training_set_balanced$Insulin)
+  training_set_balanced$BMI= scale(training_set_balanced$BMI)
+  training_set_balanced$DiabetesPedigreeFunction= scale(training_set_balanced$DiabetesPedigreeFunction)
+  training_set_balanced$Age= scale(training_set_balanced$Age)
+  
+  test_set_balanced$Pregnancies= scale(test_set_balanced$Pregnancies)
+  test_set_balanced$Glucose= scale(test_set_balanced$Glucose)
+  test_set_balanced$BloodPressure= scale(test_set_balanced$BloodPressure)
+  test_set_balanced$SkinThickness= scale(test_set_balanced$SkinThickness)
+  test_set_balanced$Insulin= scale(test_set_balanced$Insulin)
+  test_set_balanced$BMI= scale(test_set_balanced$BMI)
+  test_set_balanced$DiabetesPedigreeFunction= scale(test_set_balanced$DiabetesPedigreeFunction)
+  test_set_balanced$Age= scale(test_set_balanced$Age)
+  
+  for (i in 1:n){
+    data.svm = svm(Outcome ~.,
+            data = training_set_balanced, kernel="linear", cost=i, 
+            probability=T)
+    data.svm.pred.prob = predict(data.svm, test_set_balanced, 
+                             probability=T)
+    data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+    datasvmroc = roc(predictions = data.svm.pred.prob.mat[,1], test_set_balanced$Outcome)
+    out[,i]=auc(datasvmroc)
+  }
+  return(out)
+}
+```
+
+
+```{r}
+set.seed(123)
+out_svm=SVM_AUC(training_set_balanced, test_set_balanced, 20)
+out_svm
+```
+
+```{r}
+which.max(out_svm)
+```
+
+
+```{r}
+out_svm[1]
+```
+
+
+## Conclusion from svm model
+my best svm model (cost=1, kernel= linear) gave an auc score 0.8274653, which is higher than the auc score for the best model of the neural network mmodel (hidden= c(1,1)) 
+
+# Function to getacccuracy, recall and precision scores when varying the cost in the svm model 
+
+
+```{r}
+set.seed(000)
+SVM_Function= function(training_set_balanced, test_set_balanced,n){
+  #training.split$diagnosis <- ifelse(training.split$diagnosis =="M",1,0) # convert M into 1s, B into 0s
+   training_set_balanced$Pregnancies= scale(training_set_balanced$Pregnancies)
+  training_set_balanced$Glucose= scale(training_set_balanced$Glucose)
+  training_set_balanced$BloodPressure= scale(training_set_balanced$BloodPressure)
+  training_set_balanced$SkinThickness= scale(training_set_balanced$SkinThickness)
+  training_set_balanced$Insulin= scale(training_set_balanced$Insulin)
+  training_set_balanced$BMI= scale(training_set_balanced$BMI)
+  training_set_balanced$DiabetesPedigreeFunction= scale(training_set_balanced$DiabetesPedigreeFunction)
+  training_set_balanced$Age= scale(training_set_balanced$Age)
+  
+  test_set_balanced$Pregnancies= scale(test_set_balanced$Pregnancies)
+  test_set_balanced$Glucose= scale(test_set_balanced$Glucose)
+  test_set_balanced$BloodPressure= scale(test_set_balanced$BloodPressure)
+  test_set_balanced$SkinThickness= scale(test_set_balanced$SkinThickness)
+  test_set_balanced$Insulin= scale(test_set_balanced$Insulin)
+  test_set_balanced$BMI= scale(test_set_balanced$BMI)
+  test_set_balanced$DiabetesPedigreeFunction= scale(test_set_balanced$DiabetesPedigreeFunction)
+  test_set_balanced$Age= scale(test_set_balanced$Age)
+  out<-matrix(data=NA, nrow = 4, ncol = n)
+  rownames(out)<-c("sensitive:","specificity:","precision:","accuracy:")
+  for (i in 1:n){
+    data.svm = svm(Outcome ~.,
+            data = training_set_balanced, kernel="linear", cost=i, 
+            probability=T)
+    data.svm.pred.prob = predict(data.svm, test_set_balanced, 
+                             probability=T)
+tableA= table(data.svm.pred.prob,test_set_balanced$Outcome)
+data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+ TP=tableA["1","1"]
+  TN=tableA["0","0"]
+  FP=tableA["0","1"]
+  FN=tableA["1","0"]
+  TPR=(TP)/(TP+FN)
+  TNR=(TN)/(TN+FP)
+  PPV=(TP)/(TP+FP)
+  ACC=(TP+TN)/(TP+TN+FP+FN)
+  #c("sensitive:","specificity:","precision:","accuracy:")
+  out[,i]=c(TPR,TNR,PPV,ACC)
+  #rownames(out)<-c("sensitive:","specificity:","precision:","accuracy:")
+  #c(TPR,TNR,PPV,ACC)
+  }
+  return(out)
+}
+```
+
+
+
+
+```{r}
+set.seed(111)
+SVM_Function(training_set_balanced, test_set_balanced, 20)
+```
+
+```{r}
+SVM_Function(training_set_unbalanced, test_set_unbalanced, 20)
+```
+
+
+
+
+#KNN model 
+
+```{r}
+
+
+get_knn_auc <- function(training_set_balanced,test_set_balanced, k){
+  
+  library(class) #need this package for doing k-means clustering 
+  ##########################################################
+  # notice scaling should be done after train_test split. otherwise it will be data leakage
+
+  # scale training numeric columns 
+  
+ training_set_balanced$Pregnancies= scale(training_set_balanced$Pregnancies)
+  training_set_balanced$Glucose= scale(training_set_balanced$Glucose)
+  training_set_balanced$BloodPressure= scale(training_set_balanced$BloodPressure)
+  training_set_balanced$SkinThickness= scale(training_set_balanced$SkinThickness)
+  training_set_balanced$Insulin= scale(training_set_balanced$Insulin)
+  training_set_balanced$BMI= scale(training_set_balanced$BMI)
+  training_set_balanced$DiabetesPedigreeFunction= scale(training_set_balanced$DiabetesPedigreeFunction)
+  training_set_balanced$Age= scale(training_set_balanced$Age)
+
+  # scale test numeric columns
+  test_set_balanced$Pregnancies= scale(test_set_balanced$Pregnancies)
+  test_set_balanced$Glucose= scale(test_set_balanced$Glucose)
+  test_set_balanced$BloodPressure= scale(test_set_balanced$BloodPressure)
+  test_set_balanced$SkinThickness= scale(test_set_balanced$SkinThickness)
+  test_set_balanced$Insulin= scale(test_set_balanced$Insulin)
+  test_set_balanced$BMI= scale(test_set_balanced$BMI)
+  test_set_balanced$DiabetesPedigreeFunction= scale(test_set_balanced$DiabetesPedigreeFunction)
+  test_set_balanced$Age= scale(test_set_balanced$Age)
+  
+  
+  
+  # notice attr(knn, "prob")
+  # we need to convert into the probability of positive label, before we can calculate its auc
+  knn <- knn(training_set_balanced[,1:8], test_set_balanced[,1:8], training_set_balanced$Outcome, k= k, prob = TRUE)
+  negative_test = which(knn == 0)
+  attr(knn, "prob")[negative_test] = 1 - attr(knn, "prob")[negative_test]
+  roc <- roc(attr(knn,"prob"), as.factor(test_set_balanced$Outcome))
+  return(auc(roc))
+}
+```
+
+```{r}
+get_knn_auc(training_set_unbalanced, test_set_unbalanced,60)
+```
+
+```{r}
+get_knn_auc(training_set_balanced,test_set_balanced,60)
+```
+
+For balanced data
+
+```{r}
+set.seed(770)
+out_knn= matrix( nrow=1, ncol=60)
+rownames(out_knn)= c("AUC")
+colnames(out_knn)= c(1:60) 
+#print(out_knn)
+
+for (i in 1:60){
+  #rownames(out_knn)= c("AUC")
+  #colnames(out_knn)= c(1:60) 
+  #print(out_knn)
+  #auc= get_NN_AUC(i)
+out_knn[,i]= get_knn_auc(training_set_balanced, test_set_balanced,i)
+}
+print(out_knn)
+```
+```{r}
+which.max(out_knn)
+```
+```{r}
+out_knn[24]
+```
+
+
+
+
+Hence, the KNN model which gives the best auc has k= 24 and this auc is 0.8437738, which is higher than the auc scores for the best models using neural network and svm.
+
+
+
+
+For unbalanced data 
+
+```{r}
+set.seed(779)
+out_knn_ub= matrix( nrow=1, ncol=60)
+rownames(out_knn_ub)= c("AUC")
+colnames(out_knn_ub)= c(1:60) 
+#print(out_knn)
+
+for (i in 1:60){
+  #rownames(out_knn)= c("AUC")
+  #colnames(out_knn)= c(1:60) 
+  #print(out_knn)
+  #auc= get_NN_AUC(i)
+out_knn_ub[,i]= get_knn_auc(training_set_unbalanced, test_set_unbalanced,i)
+}
+print(out_knn_ub)
+```
+
+
+```{r}
+which.max(out_knn_ub)
+```
+
+```{r}
+out_knn_ub[23]
+```
+
+The unbalanced dataset gives an auc 0.8469547 at k= 23 as the best svm model (slightly higher than the best model using the balanced dataset but not a lot)
+
+#randomForest 
+
+
+```{r}
+library(randomForest)
+library("party")
+get_auc_rf <- function(training_set_balanced, test_set_balanced,n){
+
+  dataparty.rf = cforest(Outcome~ .,
+                       data=training_set_balanced,
+                       controls=cforest_unbiased(ntree=100,mtry=n))
+
+dataparty.rf.results.prob = predict(dataparty.rf, OOB = T,type="prob")
+
+
+predictions = do.call("rbind",dataparty.rf.results.prob)
+
+auc=auc(roc(predictions[,2],training_set_balanced$Outcome))
+return(auc)  # calculate auc
+}
+
+```
+
+```{r}
+get_auc_rf(training_set_balanced, test_set_balanced, 2)
+```
+
+
+Using balanced data, let's change the mtry from 1 to 8
+
+```{r}
+set.seed(222)
+out_rf= matrix( nrow=1, ncol=8)
+rownames(out_rf)= c("AUC")
+colnames(out_rf)= c(1:8) 
+#print(out_knn)
+
+for (i in 1:8){
+  #rownames(out_knn)= c("AUC")
+  #colnames(out_knn)= c(1:60) 
+  #print(out_knn)
+  #auc= get_NN_AUC(i)
+out_rf[,i]= get_auc_rf(training_set_balanced, test_set_balanced,i)
+}
+print(out_rf)
+```
+```{r}
+which.max(out_rf) # randomforest 
+```
+
+```{r}
+out_rf[1]
+```
+
+
+So the best model for random forest for the balanced data is m= 1, auc = 0.836255, which is lower than the auc for the best model of knn for the balanced dataset(0.8437738)
+
+##Random forest using the unbalanced dataset 
+```{r}
+set.seed(22000)
+out_rf_ub= matrix( nrow=1, ncol=8)
+rownames(out_rf_ub)= c("AUC")
+colnames(out_rf_ub)= c(1:8) 
+#print(out_knn)
+
+for (i in 1:8){
+  #rownames(out_knn)= c("AUC")
+  #colnames(out_knn)= c(1:60) 
+  #print(out_knn)
+  #auc= get_NN_AUC(i)
+out_rf_ub[,i]= get_auc_rf(training_set_unbalanced, test_set_unbalanced,i)
+}
+print(out_rf_ub)
+```
+
+
+```{r}
+which.max(out_rf_ub)  # the third value is the highest 
+```
+
+```{r}
+out_rf_ub[3]
+```
+
+ The auc for the best model of random forst using unbalanced dataset is 0.8174179 when m= 3. this is lower than the auc for the knn model using the unbalanced dataset .8469547. 
+ 
+ 
+#Q5: The Final Model (20pts)
+##· Determine which model worked the best and why you think so.
+
+
+```{r}
+which.max(out_knn) # knn nearest neighbour
+```
+
+```{r}
+which.max(out) # neural network
+```
+
+
+```{r}
+which.max(out_svm)
+```
+```{r}
+which.max(out_rf) # best model for random forest 
+```
+
+
+```{r}
+out_rf[2]
+out_knn[24]
+out[1]
+out_svm[1]
+```
+
+Hence, the best model is knn, when the k=24, which gives an auc of 0.8437738 (knn)
+
+random forest also follows closely  with an auc result  0.8317367 (rf) when m=2 and ntree=100. 
+Neural network may have given better results if i had tried more hidden layers, but I will not consider it the best model because even if it gives a very high score when rep is changed, or hidden layers increased, it takes a very long time compared to the other models. This is not great when dealing with large datasets. 
+#· Create a plot using colors to show which points are were predicted to have Diabetes and which were not.
+##Use shapes to show which points were actually Diabetes and which weren’t.
+
+
+```{r}
+ training_set_balanced$Pregnancies= scale(training_set_balanced$Pregnancies)
+  training_set_balanced$Glucose= scale(training_set_balanced$Glucose)
+  training_set_balanced$BloodPressure= scale(training_set_balanced$BloodPressure)
+  training_set_balanced$SkinThickness= scale(training_set_balanced$SkinThickness)
+  training_set_balanced$Insulin= scale(training_set_balanced$Insulin)
+  training_set_balanced$BMI= scale(training_set_balanced$BMI)
+  training_set_balanced$DiabetesPedigreeFunction= scale(training_set_balanced$DiabetesPedigreeFunction)
+  training_set_balanced$Age= scale(training_set_balanced$Age)
+
+  # scale test numeric columns
+  test_set_balanced$Pregnancies= scale(test_set_balanced$Pregnancies)
+  test_set_balanced$Glucose= scale(test_set_balanced$Glucose)
+  test_set_balanced$BloodPressure= scale(test_set_balanced$BloodPressure)
+  test_set_balanced$SkinThickness= scale(test_set_balanced$SkinThickness)
+  test_set_balanced$Insulin= scale(test_set_balanced$Insulin)
+  test_set_balanced$BMI= scale(test_set_balanced$BMI)
+  test_set_balanced$DiabetesPedigreeFunction= scale(test_set_balanced$DiabetesPedigreeFunction)
+  test_set_balanced$Age= scale(test_set_balanced$Age)
+  
+data.knn.prob = knn(training_set_balanced[,1:8], test_set_balanced[,1:8], 
+                    training_set_balanced$Outcome, k=24, prob = TRUE)
+
+Outcome = which(data.knn.prob == 0)
+attr(data.knn.prob, "prob")[Outcome] = 1 - attr(data.knn.prob, "prob")[Outcome]
+
+data.knn.prob.roc = roc(attr(data.knn.prob,"prob"),
+                       test_set_balanced$Outcome)
+auc(data.knn.prob.roc)
+```
+
+```{r}
+plot(data.knn.prob.roc)
+```
+
+```{r}
+ggplot(test_set_balanced)+geom_point(mapping = aes(x=Glucose, y=BMI, color=factor(data.knn.prob), shape=factor(Outcome))) # I chose glucose and BMI as the two variables because they had the highest perason correlation scores in question 2 
+```
+
+red colour: predicted to not be diabetic, blue color, predicted to be diabetic by the best knn model on the balanced test data. 
+circle shape: the actual outcome of not diabetic, triange shape: the actual outcome of being diabetic. 
+A large number of red circles and blue triangles means a good model. 
+
+
