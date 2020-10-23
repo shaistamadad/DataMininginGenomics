@@ -1,0 +1,475 @@
+---
+title: "BDBM_MidTerm"
+author: "shaistamadad"
+date: "3/30/2020"
+output: html_document
+---
+
+```{r}
+library(RMariaDB)  #loading in the packages I need for this midterm 
+library(tidyverse)
+library(RSQLite)
+```
+
+
+##Read in the three files, also making sure blank spaces are treated as NA 
+
+```{r}
+AthBIOGRID <- read.delim("G:/My Drive/Datamining/Midterm/AthBIOGRID.txt", header=TRUE, na.strings=c("","NA"))
+```
+
+```{r}
+head(AthBIOGRID)
+dim(AthBIOGRID)
+```
+
+
+
+
+```{r}
+AthBiomart <- read.delim("G:/My Drive/Datamining/Midterm/AthBiomart.txt",na.strings=c("","NA"))
+head(AthBiomart)
+```
+
+
+
+
+```{r}
+NextGenRaw <- read.delim("G:/My Drive/Datamining/Midterm/NextGenRaw.txt")
+head(NextGenRaw)
+dim(NextGenRaw)
+```
+
+##Question 1: Creation of the database and the 4 tables 
+
+##DataType Table 
+
+DTID will be the primary key
+```{r}
+#Table DataType 
+
+DataType<- data.frame("DTID"= 1:4, "DataType"= c("Gene","Probe", "GOterm", "Experiment"))
+DataType
+```
+
+##Created my database called sm8847_midterm.sqlite
+
+
+```{r}
+sm8847sqlite<-dbConnect(RSQLite::SQLite(), db="sm8847_midterm.sqlite")
+```
+
+
+##Copied the DataType dataframe into my database.I have commented this out in the code below as I only need it once. 
+
+
+```{r}
+#copy_to(sm8847sqlite, df=DataType,temporary=FALSE,overwrite=TRUE,name="DataType")
+#only need to copy this table once, so commented in out 
+```
+
+
+##DataTable 
+
+The dataframe for the Table Data 
+I have created three dataframes by extracting data from the BioMart file, and allocated DTID_Dataype 1, 2, 3, 4 to columns containing gene id, probe, go term values respectively. The fourth dataframe is a dataframe with 2 columns: 1 with the experiment column names from NextGenRaw file, and seconc row is the DTID_DataType which is 4. 
+
+```{r}
+Data1= data.frame("Dataname"= AthBiomart$Gene.stable.ID, "DTID_DataType"= 1) 
+Data2=data.frame("Dataname"= AthBiomart$Affymetrix.array.Arabidopsis.ATH1.121501.ID,"DTID_DataType"= 2)
+Data3=data.frame("Dataname"= AthBiomart$GO.term.accession,"DTID_DataType"=3)
+Data4=data.frame("Dataname"= colnames(NextGenRaw),DTID_DataType=4)
+```
+
+#Bind the four dataframes together to get Data dataframe 
+
+```{r}
+Data= rbind(Data1,Data2,Data3,Data4)
+Data_Unique= unique(Data)
+head(Data_Unique)  #to get rid of duplicates 
+```
+
+```{r}
+DID= 1:nrow(Data_Unique)  #primary key for Data Table 
+DataTable= cbind(DID,Data_Unique)
+head(DataTable)
+```
+
+
+```{r}
+dim(DataTable)
+```
+
+# Data dataframe containing DID, Dataname, DTID_DataType. 
+
+
+
+```{r}
+#copy_to(sm8847sqlite, df=DataTable,temporary=FALSE,overwrite=TRUE,name="Data")
+```
+
+
+
+
+##Attributes Table 
+
+Only taken Data from AthBioMart. Gene has 2 Attributes: Genename and Gene Description, both from AthBiomart
+
+```{r}
+GA_Bio= data.frame("Gene.Stable.ID"= AthBiomart$Gene.stable.ID, "DataAttributeType"= "Gene.name", "DataValue"= AthBiomart$Gene.name) # get a dataframe with two columns: gene stabe ID and gene names 
+#GA_Bio$DataValue= sub("^$", 'NULL', GA_Bio$DataValue)
+GA= GA_Bio[complete.cases(GA_Bio),] # get rid of rows with missing values 
+GA=unique(GA)
+#GA= GA[complete.cases(GA),]
+dim(GA)
+```
+
+```{r}
+GA3=  data.frame("Gene.Stable.ID"= AthBiomart$Gene.stable.ID ,"DataAttributeType"= "Gene.description", "DataValue"= AthBiomart$Gene.description) #get a dataframe with 3 columns: gene stabe ID and gene description  and the gene attribute type, which is gene.description for all rows 
+GA3= unique(GA3)
+```
+
+```{r}
+GA_final= rbind(GA,GA3) #final dataframe with gene attributes: noth gene name and gene description 
+dim(GA_final)
+```
+
+```{r}
+Attribute_Table_Gene=inner_join(GA_final,DataTable, by= c("Gene.Stable.ID" = "Dataname"))
+dim(Attribute_Table_Gene)
+```
+
+The dataframe containing attribute Go.term.name for GoTerm 
+
+```{r}
+GOTA=  data.frame("GotermAccession"= AthBiomart$GO.term.accession ,"DataAttributeType"= "Go.term.name", "DataValue"= AthBiomart$GO.term.name)  # get go term attribute go term name 
+GOTA= unique(GOTA)
+```
+
+
+```{r}
+Attribute_Table_GoTerm= inner_join(GOTA,DataTable, by= c("GotermAccession" = "Dataname"))
+```
+
+
+
+```{r}
+Attribute1 = subset(Attribute_Table_Gene, select = -c(Gene.Stable.ID,DTID_DataType)) #remove unneeded rows 
+Attribute2= subset(Attribute_Table_GoTerm, select = -c(GotermAccession,DTID_DataType))
+Attribute3=rbind(Attribute1,Attribute2) #final dataframe containing both gene and go term attributes 
+DAID = 1:nrow(Attribute3)  #add the Data Attribute primary key 
+Attribute_Table= cbind(DAID,Attribute3)
+```
+
+
+# Write this dataframe to my database called sm8847_midterm.sqlite as Table: DataAttributes 
+
+```{r}
+#copy_to(sm8847sqlite, df=Attribute_Table,temporary=FALSE,overwrite=TRUE,name="DataAttributes")
+```
+
+
+
+##Relationship Table
+There are four relationship: Gene to Go term, Gene to probe, gene to experiment, and gene to gene interaction. I wil create four separate dataframes for each relationship containing the 5 columns: RID, Relationship, DID_Data_1, DID_Data_2, RelValue and then merge them together to get the relationship table which I will write as a table into my dataframe. 
+
+```{r}
+GeneDT<- DataTable[DataTable$DTID_DataType ==1,] #dataframe extracted from my DataTable which contanied information DID, DTID_DataType and Dataname. This dataframe has information only for Dataname Gene 
+ProbeDT <-  DataTable[ DataTable$DTID_DataType ==2,] #dataframe with info on probe 
+GotermDT<-  DataTable[ DataTable$DTID_DataType ==3,] #dataframe with info on Gotermaccession  
+ExperimentDT <-  DataTable[ DataTable$DTID_DataType ==4,] #dataframe with information on experiments 
+```
+
+
+#Gene2Probe
+
+```{r}
+GeneID_Probe <- c("Gene.stable.ID","Affymetrix.array.Arabidopsis.ATH1.121501.ID")
+Gene2Probe<-AthBiomart[GeneID_Probe]
+Gene2Probe<-unique(Gene2Probe)
+```
+
+
+```{r}
+Gene2Probe1<-merge(Gene2Probe,GeneDT,by.x = "Gene.stable.ID", by.y = "Dataname" )
+Gene2Probe2<-merge(Gene2Probe1,ProbeDT,by.x = "Affymetrix.array.Arabidopsis.ATH1.121501.ID", by.y = "Dataname" )
+Relationship_Gene2Probe<-data.frame("DID_Data_1"=Gene2Probe2$DID.x,"DID_Data_2"=Gene2Probe2$DID.y,"Relationship"="gene to probe","RelValue"=NA)  # only take the DID values for Gene and Probe respectively from Gene2Probe2 dataframe containing all other information 
+```
+
+
+#GOterm2Gene
+
+```{r}
+GOTerm_Gene= data.frame("Gene.stable.ID"= AthBiomart$Gene.stable.ID, "Goterm.accession"= AthBiomart$GO.term.accession)
+GOTerm_Gene= unique(GOTerm_Gene)
+```
+
+
+
+```{r}
+GOterm2Gene1<-merge(GOTerm_Gene,GeneDT,by.x = "Gene.stable.ID", by.y = "Dataname" )
+GOterm2Gene2<-merge(GOterm2Gene1,GotermDT,by.x = "Goterm.accession", by.y = "Dataname" )
+Relationship_GOterm2Gene<-data.frame("DID_Data_1"=GOterm2Gene2$DID.x,"DID_Data_2"=GOterm2Gene2$DID.y,"Relationship"="gene to Go.term.accession","RelValue"=NA)
+```
+
+
+#Gene2Experiment
+
+
+
+
+```{r}
+library(reshape2)
+Gene2Experiment <- melt(NextGenRaw)  
+Gene2Experiment1<-merge(Gene2Experiment,GeneDT,by.x = "GENE", by.y = "Dataname" ) 
+Gene2Experiment2<-merge(Gene2Experiment1,ExperimentDT,by.x = "variable", by.y = "Dataname" )
+Relationship_Gene2Experiment<-data.frame("DID_Data_1"=Gene2Experiment2$DID.x,"DID_Data_2"=Gene2Experiment2$DID.y,"Relationship"="gene to experiment","RelValue"=Gene2Experiment2$value)
+head(Relationship_Gene2Experiment)
+```
+
+#Gene to Gene Interaction (I have called this Relationship type Experimental System)
+
+```{r}
+Gene2Gene<-c("Systematic.Name.Interactor.A","Systematic.Name.Interactor.B", "Experimental.System")
+Gene2Gene1<-AthBIOGRID[Gene2Gene]
+
+Gene2Gene2<-merge(Gene2Gene1,GeneDT,by.x = "Systematic.Name.Interactor.A", by.y = "Dataname" )
+#head(Gene2Gene2)
+Gene2Gene3<-merge(Gene2Gene2,GeneDT,by.x = "Systematic.Name.Interactor.B", by.y = "Dataname" )
+#head(Gene2Gene3)
+
+Relationship_Gene2Gene<-data.frame("DID_Data_1"=Gene2Gene3$DID.x,"DID_Data_2"=Gene2Gene3$DID.y,"Relationship"= "Experimental.System","RelValue"=Gene2Gene3$Experimental.System)
+head(Relationship_Gene2Gene)
+```
+
+
+
+```{r}
+Relationship= rbind(Relationship_Gene2Experiment,Relationship_GOterm2Gene,Relationship_Gene2Probe,Relationship_Gene2Gene)
+RID= 1:nrow(Relationship)
+Relationship_Table= cbind(RID, Relationship)
+dim(Relationship_Table)
+```
+
+```{r}
+#copy_to(sm8847sqlite, df=Relationship_Table,temporary=FALSE,overwrite=TRUE,name="Relationship")
+```
+
+
+
+
+## Question 2 
+
+2) Write a function getReadCounts() where the input is a go-term and the output is the read count for each gene in each experiment. 
+
+So if I type getReadCounts(“binding”) I should get back a matrix ( or data frame ) with 4 columns and one row for each gene associated with “binding”.  
+
+
+
+
+```{r}
+drv<-dbDriver("SQLite")
+con<-dbConnect(drv, "sm8847_midterm.sqlite")  # i created a second connection to my database beause I forgot I had done that already when creating the tables. I already used this when I realised my mistake, so kept this connection as well. 
+```
+
+
+
+
+
+```{r}
+getReadCounts= function(goterm) {
+library(dplyr)
+drv<-dbDriver("SQLite")
+con<-dbConnect(drv, "sm8847_midterm.sqlite")  # create a connection to my database 
+relationship= tbl(con, "Relationship") # get the three tables that I need for this function 
+dataattributes= tbl(con, "DataAttributes")
+data.table= tbl(con, "Data")
+
+
+joined_data= left_join(relationship,dataattributes, by= c("DID_Data_2"= "DID"))%>% left_join(., data.table, by = c("DID_Data_1"="DID"))%>% filter(DataValue== goterm)%>%collect()  # choose only those rows for which the DataAttributes  table's column DataValue is the given go term which is the input of the function. I have joined information from all three tables 
+#print(joined_data)
+joined_data2= left_join(relationship,data.table, by= c("DID_Data_1"= "DID") )%>%collect()
+#print(joined_data2)
+dataframe1 = data.frame(Control1=numeric(),
+                          Control2=numeric(),
+                          Nitrate1=numeric(),
+                          Nitrate2=numeric(),
+                          stringsAsFactors = F) # very helpful option
+#initialised my dataframe. I will fill this up with the read counfs for all genes associated with the given go term 
+#print(dataframe1)
+  for (i in 1:length(joined_data[["DID_Data_1"]])){
+  info = joined_data2 %>% 
+    filter(Relationship=="gene to experiment", DID_Data_1== joined_data[["DID_Data_1"]][i]) %>% 
+    select( RelValue) %>% collect() #  filter to get only those values for RelValue from the relationship table where relationship is gene to experiment and the DID_Data_1 represents the DID of those genes which are asscociated with the gievn go term .
+  info$RelValue= as.integer(info$RelValue)
+  info=t(info) # need this data in transverse form 
+  if (ncol(info)==0){ 
+        info=data.frame(V1=NA,V2=NA, V3=NA, V4=NA)  # thee were many genes associated with go term, for which no read coutns existed: in such case, the row for this gene will come up as NA NA NA NA in the output of this function 
+    }
+#print(colnames(info))
+dataframe1= rbind(dataframe1, info)
+  }   
+Gene= joined_data$Dataname  # get the gene names associated with the go term 
+dataframe5= cbind(Gene,dataframe1) # put the gene names next to the four read counts: one from each experiment 
+colnames(dataframe5)= c("Associated_Gene", "Control1", "Control2", "Nitrate1", "Nitrate2")
+return(dataframe5)
+}
+```
+
+
+
+```{r}
+getReadCounts('binding')
+```
+
+
+3) Speeding up our query.
+
+Take a time stamp in R to calculate how long the query in part 2 takes.
+Use proc.time() and save the result in a vector just before you run the query and run it one more time after the function call and save it as a different variable.
+Simply subtract the two variables to see how long your query took.
+
+##Before indexing:
+
+```{r}
+A = proc.time()
+#A
+getReadCounts('binding')
+B = proc.time()
+#B
+Time_it_took = B-A
+
+```
+
+Before Indexing 
+
+```{r}
+Time_it_took
+```
+
+In the vector, Time_it_took, The first two entries (user and system) are the total user and system CPU times of the current R process and any child processes on which it has waited, and the third entry (elapsed) is the ‘real’ elapsed time since the process was started
+
+##Note: The elapsed time when I ran this for the first time was 16.28 seconds. After I knit the Rmd file,however, the elapsed time  kept changing to smaller numbers after this. I tried to remove the indexes from my database once again and re-run this to get the time range between 13-16 seconds in elapsed column, but it didn't work. I am not sure what went wrong, but Time_it_took wheh I had not created the indexes was 16.28 seconds. I had used DROP command in SQLStudio to drop the indexes, and then re-run the proc.time() command. However, the time still remained lower than the original 16.28 seconds. 
+
+
+
+```{r}
+drv<-dbDriver("SQLite")
+con<-dbConnect(drv, "sm8847_midterm.sqlite")
+```
+
+
+b. Create indexes on your tables to try to speed up the query. Explain the reason for creating the indexes and how long your query takes now?
+
+
+I created three indexes for my dataframe. 
+1) on the DataValue column frm DataAttributes tables. In my function getReadCounts(), I have used DataValue as a filter (equivalent of the where statement) in my first sql query to choose from the attributes table only those rows where the DataValue is a goterm. So, putting an index on this column will help speed up my query. Indexing divides up the given column in smaller bins and helps make the search more efficient. 
+2) My second index is on the Relationship column in the Relationship table. This is because in my getReadCounts(), in the for loop that I have used to the  the read counts for a given DID_Data_1 (representing a gene) from the Relationship Table, I have used a filter to choose only those rows, where Relationship== gene to experiement, and the DTID_Data_1 is a number from the DID values I got from the filter in 1. So, putting index on the Relationship column will help speed up my search as the function will no longer go through each item of the Relationship column: Indexing is similar to making marks on the different pages of a book to help find the middle, end or beginning section more easily. 
+
+3) My third index is on the DID_Data_1 column in the relationship table. I am filtering Relationship table to get RelValues for columns from DID_Data_1 column which represent gene DIDs associated with a given GOterm which is the input of my function. Hence, indexing this column will speed up my query. 
+
+I decided to create indexes directly in in SQL studio, using the following commands: 
+
+
+
+CREATE INDEX DataValueIndex ON DataAttributes (
+    DataValue
+);
+
+
+CREATE INDEX RelationshipIndex ON Relationship (
+    Relationship
+);
+CREATE INDEX DataIDIndex ON Relationship (DID_Data_1);
+
+
+However, in case we were required to do it through R, I have also written the R commands needed to create index from R. But I did not use these. 
+
+dbExecute(con, "CREATE INDEX DataValueIndex ON DataAttributes (DataValue)")
+dbExecute(con, "CREATE INDEX RelationshipIndex ON Relationship (Relationship)")
+dbExecute(con,"CREATE INDEX DataIDIndex ON Relationship (DID_Data_1)")
+
+
+
+
+
+
+After Indexing 
+
+```{r}
+A = proc.time()
+A
+getReadCounts('binding')
+B = proc.time()
+B
+Time_it_took = B-A
+
+```
+
+
+After Indexing 
+
+```{r}
+Time_it_took
+```
+
+
+# The time after indexing has remained consistent at around 6 or 7 seconds. In this case, it is 6.78 seconds (it might change when I knit this file). 
+
+##Conclusion on Indexing
+Indexing decreased the time by more than 40 percent the first time I ran it. 
+
+
+
+```{r}
+dbDisconnect(con)
+dbDisconnect(sm8847sqlite)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
