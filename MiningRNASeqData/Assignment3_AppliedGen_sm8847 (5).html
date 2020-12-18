@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<!-- saved from url=(0096)file:///C:/Users/admin/Documents/Applied_Genomics_Asgn3/_site/Assignment3_AppliedGen_sm8847.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<meta name="generator" content="pandoc">
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE">
+
+
+<meta name="author" content="shaistamadad">
+
+
+<title>Assignment3_AppliedGen_sm8847</title>
+
+<script src="./Assignment3_AppliedGen_sm8847_files/jquery.min.js.download"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="./Assignment3_AppliedGen_sm8847_files/bootstrap.min.css" rel="stylesheet">
+<script src="./Assignment3_AppliedGen_sm8847_files/bootstrap.min.js.download"></script>
+<script src="./Assignment3_AppliedGen_sm8847_files/html5shiv.min.js.download"></script>
+<script src="./Assignment3_AppliedGen_sm8847_files/respond.min.js.download"></script>
+<script src="./Assignment3_AppliedGen_sm8847_files/tabsets.js.download"></script>
+<link href="./Assignment3_AppliedGen_sm8847_files/default.css" rel="stylesheet">
+<script src="./Assignment3_AppliedGen_sm8847_files/highlight.js.download"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type="text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+<script type="text/javascript" src="./Assignment3_AppliedGen_sm8847_files/MathJax.js.download"></script><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+
+<body><div id="MathJax_Message" style="display: none;"></div>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="file:///C:/Users/admin/Documents/Applied_Genomics_Asgn3/_site/index.html">My Website</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="file:///C:/Users/admin/Documents/Applied_Genomics_Asgn3/_site/index.html">Home</a>
+</li>
+<li>
+  <a href="file:///C:/Users/admin/Documents/Applied_Genomics_Asgn3/_site/about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignment3_AppliedGen_sm8847</h1>
+<h4 class="author">shaistamadad</h4>
+<h4 class="date">3/5/2020</h4>
+
+</div>
+
+
+<p>#Question 1 1. For all the genes in the cancerGenes.names.txt file, identify their name, name2, chromosome, strand, transcription start and transcription end coordinates. This information is available in the table refGene. Save this dataframe as refGenesCoor</p>
+<p>** note, the name field is the refgene name, however the names provided in the files are found in the name2 field of the refGene table.</p>
+<p>** note that there will be several rows that contain a match to some genes. This is because there are multiple transcripts from the same locus. In such cases ONLY keep the first row.</p>
+<p>#Answer</p>
+<pre class="r"><code class="hljs"><span class="hljs-keyword">library</span>(RMariaDB)   <span class="hljs-comment"># I will need these packages to establish a connection to the database server </span></code></pre>
+<pre><code class="hljs">## Warning: package 'RMariaDB' was built under R version 3.6.2</code></pre>
+<pre class="r"><code class="hljs"><span class="hljs-keyword">library</span>(tidyverse)</code></pre>
+<pre><code class="hljs">## Warning: package 'tidyverse' was built under R version 3.6.2</code></pre>
+<pre><code class="hljs">## -- Attaching packages ------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code class="hljs">## v ggplot2 3.2.1     v purrr   0.3.3
+## v tibble  2.1.3     v dplyr   0.8.4
+## v tidyr   1.0.2     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.4.0</code></pre>
+<pre><code class="hljs">## Warning: package 'tidyr' was built under R version 3.6.2</code></pre>
+<pre><code class="hljs">## Warning: package 'dplyr' was built under R version 3.6.2</code></pre>
+<pre><code class="hljs">## -- Conflicts ---------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code class="hljs">orioncon&lt;-dbConnect(RMariaDB::MariaDB(),
+host=<span class="hljs-string">"orion.bio.nyu.edu"</span>,password=<span class="hljs-string">"mkatari@nyu"</span>,
+user=<span class="hljs-string">"ga1009"</span>,db=<span class="hljs-string">"hg19"</span>
+)</code></pre>
+<p>I have saved the table refGene from the database in a variable called refgene</p>
+<pre class="r"><code class="hljs">refgene = tbl(orioncon, <span class="hljs-string">"refGene"</span>)
+refgene$txStart= as.numeric(refgene$txStart)
+refgene$txEnd= as.numeric(refgene$txStart)
+refgene</code></pre>
+<pre><code class="hljs">## # Source:   table&lt;refGene&gt; [?? x 17]
+## # Database: mysql [ga1009@orion.bio.nyu.edu:NA/hg19]
+##    row_names X.bin name  chrom strand txStart txEnd cdsStart cdsEnd exonCount
+##    &lt;chr&gt;     &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;int64&gt; &lt;int&gt; &lt;int64&gt;  &lt;int6&gt; &lt;int64&gt;  
+##  1 1         0     NM_0~ chr1  +      669992~ 6721~ 67000041 67208~ 22       
+##  2 2         0     NM_0~ chr1  +      669996~ 6721~ 67000041 67208~ 25       
+##  3 3         1     NM_0~ chr1  +      167671~ 1678~ 16767256 16785~  7       
+##  4 4         1     NM_0~ chr1  +      167671~ 1678~ 16767256 16785~  8       
+##  5 5         1     NM_0~ chr1  +      167671~ 1678~ 16767256 16785~  8       
+##  6 6         1     NR_1~ chr1  +      335477~ 3356~ 33567493 33567~  8       
+##  7 7         1     NM_0~ chr1  -      489985~ 5048~ 48999844 50489~ 13       
+##  8 8         1     NM_0~ chr1  -      489985~ 5048~ 48999844 50489~ 14       
+##  9 9         1     NR_1~ chr1  -      489985~ 5048~ 50489626 50489~ 13       
+## 10 10        1     NM_0~ chr1  +      250717~ 2517~ 25072044 25167~  6       
+## # ... with more rows, and 7 more variables: exonStarts &lt;chr&gt;, exonEnds &lt;chr&gt;,
+## #   score &lt;int64&gt;, name2 &lt;chr&gt;, cdsStartStat &lt;chr&gt;, cdsEndStat &lt;chr&gt;,
+## #   exonFrames &lt;chr&gt;</code></pre>
+<p>I was having trouble reading in the text file initally so manually created a vector with all the cancer names.</p>
+<pre class="r"><code class="hljs">cancernames=c(<span class="hljs-string">'ABCC10'</span>,
+<span class="hljs-string">'ALDH1A2'</span>,
+<span class="hljs-string">'APAF1'</span>,
+<span class="hljs-string">'APC'</span>,
+<span class="hljs-string">'CAD'</span>,
+<span class="hljs-string">'CDH1'</span>,
+<span class="hljs-string">'CTNNB1'</span>,
+<span class="hljs-string">'EGFR'</span>,
+<span class="hljs-string">'EPHA3'</span>,
+<span class="hljs-string">'FBXW7'</span>,
+<span class="hljs-string">'FLT3'</span>,
+<span class="hljs-string">'GMPS'</span>,
+<span class="hljs-string">'HUWE1'</span>,
+<span class="hljs-string">'KIT'</span>,
+<span class="hljs-string">'L1CAM'</span>,
+<span class="hljs-string">'NOTCH1'</span>,
+<span class="hljs-string">'NPFFR2'</span>,<span class="hljs-string">'NRAS'</span>,<span class="hljs-string">'NTRK2'</span>,
+<span class="hljs-string">'OR4M2'</span>,
+<span class="hljs-string">'PLK1'</span>,
+<span class="hljs-string">'PLOD1'</span>,
+<span class="hljs-string">'PTCH1'</span>,
+<span class="hljs-string">'PTPN11'</span>,
+<span class="hljs-string">'RAPGEF1'</span>,
+<span class="hljs-string">'RUNX1'</span>,
+<span class="hljs-string">'RYR3'</span>,
+<span class="hljs-string">'SMAD4'</span>,
+<span class="hljs-string">'SOCS1'</span>,
+<span class="hljs-string">'ST8SIA3'</span>,
+<span class="hljs-string">'TG'</span>,
+<span class="hljs-string">'TP53'</span>,
+<span class="hljs-string">'TP73'</span>,
+<span class="hljs-string">'VHL'</span>)</code></pre>
+<p>Read in the textfile with gene names anyway, but I haven’t used this in the code.</p>
+<pre class="r"><code class="hljs"><span class="hljs-keyword">library</span>(readr)
+cancerGenes_txt &lt;- read_csv(<span class="hljs-string">"cancerGenes.txt.txt"</span>, 
+    col_names = <span class="hljs-literal">FALSE</span>)</code></pre>
+<pre><code class="hljs">## Parsed with column specification:
+## cols(
+##   X1 = col_character()
+## )</code></pre>
+<pre class="r"><code class="hljs">View(cancerGenes_txt)</code></pre>
+<p>In order to create the refGenesCoor dataframe containing the containing the required information for the genes in the text file, I first wrote a function called getgeneinfo, which takes as an input the name of the gene, and returns the required information in the Question 1. I then created an empty dataframe called refGenesCoor with the six columns for the required information. I then used a foor loop to run the function on each of the 34 genes.</p>
+<pre class="r"><code class="hljs">getgeneinfo = <span class="hljs-keyword">function</span>(gene) {
+refgene = tbl(orioncon, <span class="hljs-string">"refGene"</span>)%&gt;%
+  filter(name2==gene) %&gt;%
+  select(name,name2,txStart,txEnd, chrom,strand) %&gt;% collect()
+refgene$txEnd= as.integer(refgene$txEnd)
+refgene$txStart= as.integer(refgene$txStart)
+  <span class="hljs-keyword">return</span>(refgene[<span class="hljs-number">1</span>,])
+}</code></pre>
+<p>It was important to convert exEnd and txStart to integers, otherwise the correct txEnd and txStart numbers did not appear in the final refGenesCoor dataframe.</p>
+<pre class="r"><code class="hljs">refGenesCoor&lt;- data.frame(matrix(ncol = <span class="hljs-number">6</span>))   <span class="hljs-comment">#empty dataframe with the six columns </span>
+X=c(<span class="hljs-string">'name'</span>,<span class="hljs-string">'name2'</span>,<span class="hljs-string">'txStart'</span>,<span class="hljs-string">'txEnd'</span>, <span class="hljs-string">'chrom'</span>,<span class="hljs-string">'strand'</span>) <span class="hljs-comment"># names for my dataframe columns, corresponding to the 6 attributes from the table refGene </span>
+colnames(refGenesCoor) = X
+<span class="hljs-comment">#refGenesCoor[1,]</span>
+<span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:length(cancernames)){
+  refGenesCoor[i,]= getgeneinfo(cancernames[i])
+}
+
+refGenesCoor</code></pre>
+<pre><code class="hljs">##            name   name2   txStart     txEnd chrom strand
+## 1  NM_001198934  ABCC10  43395291  43418163  chr6      +
+## 2  NM_001206897 ALDH1A2  58245621  58358121 chr15      -
+## 3     NM_181869   APAF1  99039077  99129211 chr12      +
+## 4  NM_001127511     APC 112043201 112181936  chr5      +
+## 5  NM_001306079     CAD  27440257  27466660  chr2      +
+## 6     NM_004360    CDH1  68771192  68869445 chr16      +
+## 7     NM_001904  CTNNB1  41240941  41281939  chr3      +
+## 8     NM_201284    EGFR  55086724  55238738  chr7      +
+## 9     NM_005233   EPHA3  89156673  89531284  chr3      +
+## 10    NM_033632   FBXW7 153242409 153456185  chr4      -
+## 11    NR_130706    FLT3  28577410  28674729 chr13      -
+## 12    NM_003875    GMPS 155588324 155655520  chr3      +
+## 13    NM_031407   HUWE1  53559056  53713674  chrX      -
+## 14    NM_000222     KIT  55524094  55606881  chr4      +
+## 15 NM_001278116   L1CAM 153126968 153151628  chrX      -
+## 16    NM_017617  NOTCH1 139388884 139440238  chr9      -
+## 17    NM_004885  NPFFR2  72897520  73013918  chr4      +
+## 18    NM_002524    NRAS 115247084 115259515  chr1      -
+## 19    NM_006180   NTRK2  87283372  87641985  chr9      +
+## 20 NM_001004719   OR4M2  22368477  22369561 chr15      +
+## 21    NM_005030    PLK1  23690092  23701688 chr16      +
+## 22 NM_001316320   PLOD1  11994723  12035599  chr1      +
+## 23    NM_000264   PTCH1  98205263  98270831  chr9      -
+## 24    NM_080601  PTPN11 112856701 112924727 chr12      +
+## 25    NM_005312 RAPGEF1 134452156 134612925  chr9      -
+## 26    NM_001754   RUNX1  36160097  36421595 chr21      -
+## 27    NM_001036    RYR3  33603162  34158304 chr15      +
+## 28    NM_005359   SMAD4  48556582  48611411 chr18      +
+## 29    NM_003745   SOCS1  11348273  11350039 chr16      -
+## 30    NM_015879 ST8SIA3  55019720  55036161 chr18      +
+## 31    NM_003235      TG 133879204 134147143  chr8      +
+## 32 NM_001126116    TP53   7571719   7578811 chr17      -
+## 33 NM_001126241    TP73   3607235   3652765  chr1      +
+## 34    NM_000551     VHL  10183318  10195354  chr3      +</code></pre>
+<p>After I have created my refGenesCoor dataframe, I connected to SQLite, created a database called sm8847_hg19.sqlite and added refGenesCoor as one of my tables.</p>
+<pre class="r"><code class="hljs"><span class="hljs-keyword">library</span>(<span class="hljs-string">"RSQLite"</span>)    <span class="hljs-comment"># need to call the RSQLite library to create a database via R. </span></code></pre>
+<pre><code class="hljs">## Warning: package 'RSQLite' was built under R version 3.6.2</code></pre>
+<pre class="r"><code class="hljs">drv&lt;-dbDriver(<span class="hljs-string">"SQLite"</span>)
+con&lt;-dbConnect(drv, <span class="hljs-string">"sm8847_hg19.sqlite"</span>)    <span class="hljs-comment"># I have now created a database, I will next add the tables, dbConnect helped me connect to my database via R </span>
+con</code></pre>
+<pre><code class="hljs">## &lt;SQLiteConnection&gt;
+##   Path: C:\Users\admin\Documents\Applied_Genomics_Asgn3\sm8847_hg19.sqlite
+##   Extensions: TRUE</code></pre>
+<pre class="r"><code class="hljs"><span class="hljs-comment">#dbWriteTable(con, "refGenesCoor", refGenesCoor)</span></code></pre>
+<p>I have commented out the dbWriteTable command since it only needs to be given once, and will cause issues during knitting the RMD file otherwise as all the code gets run during knitting. If this command is run again, it will potentially overwrite the already existing table in the sm8847_hg19.sqlite database.</p>
+<p>#Question 2</p>
+<p>For each gene, determine the number of reads that map to the different tissues. The sequence reads are stored in tables that begin with “burge”. Each row in a given table is one read and it contains the coordinates of the match. So you can simply count the number of rows that are returned when asking for all reads that match within the coordinates of a gene.</p>
+<p>Save this information in a data frame where each row is the gene and each column is a different tissue type. Save this dataframe as GeneRNAseq and add it to your hg19.sqlite database as a table.</p>
+<p>#Answer First I created an empty dataframe with 8 columns and 34 rows. Each column will represent reads for each gene from one of the 8 tables. Each row represents one of the 34 genes.</p>
+<pre class="r"><code class="hljs">Readsdf&lt;- data.frame(matrix(ncol = <span class="hljs-number">8</span>, nrow = <span class="hljs-number">34</span>))
+row.names(Readsdf)= cancernames
+colnames(Readsdf) = c(<span class="hljs-string">'Brain'</span>, <span class="hljs-string">'Breast'</span>, <span class="hljs-string">'Colon'</span>, <span class="hljs-string">'Heart'</span>, <span class="hljs-string">'Liver'</span>, <span class="hljs-string">'LymphNode'</span>, <span class="hljs-string">'SkelMuscle'</span>, <span class="hljs-string">'Testes'</span>)  <span class="hljs-comment"># corresponding to the tissue type</span>
+<span class="hljs-comment">#Readsdf</span></code></pre>
+<pre class="r"><code class="hljs">dbGetQuery(orioncon, <span class="hljs-string">"show tables"</span>) -&gt; hg19.tables   <span class="hljs-comment"># I only need the first 8 tables </span>
+hg19.tables</code></pre>
+<pre><code class="hljs">##                        Tables_in_hg19
+## 1      burgeRnaSeqGemMapperAlignBrain
+## 2     burgeRnaSeqGemMapperAlignBreast
+## 3      burgeRnaSeqGemMapperAlignColon
+## 4      burgeRnaSeqGemMapperAlignHeart
+## 5      burgeRnaSeqGemMapperAlignLiver
+## 6  burgeRnaSeqGemMapperAlignLymphNode
+## 7 burgeRnaSeqGemMapperAlignSkelMuscle
+## 8     burgeRnaSeqGemMapperAlignTestes
+## 9                             refGene</code></pre>
+<pre class="r"><code class="hljs">Tissue_Tables=grep(<span class="hljs-string">"burge"</span>, hg19.tables[,<span class="hljs-number">1</span>],
+     value=<span class="hljs-literal">T</span>)  <span class="hljs-comment"># I used the grep command to get tables starting with burge. I will need this table list for the next step</span>
+Tissue_Tables</code></pre>
+<pre><code class="hljs">## [1] "burgeRnaSeqGemMapperAlignBrain"      "burgeRnaSeqGemMapperAlignBreast"    
+## [3] "burgeRnaSeqGemMapperAlignColon"      "burgeRnaSeqGemMapperAlignHeart"     
+## [5] "burgeRnaSeqGemMapperAlignLiver"      "burgeRnaSeqGemMapperAlignLymphNode" 
+## [7] "burgeRnaSeqGemMapperAlignSkelMuscle" "burgeRnaSeqGemMapperAlignTestes"</code></pre>
+<p>Here, I have used a double loop. For each of the 8 tables in the database, I have run an sql query. In this query, I have asked for all the rows in the given table corresponding to the gene. The second loop uses the dataframe regGenesCoor from question 1 to get the gene coordinates for all 34 genes. read.count is the sql query result, which is the rows from the tissue table fitting the where criteria. In the end, the row number of the red.count, represented by dim(read.count)[1] is saved in the Readsdf dataframe for each gene.</p>
+<pre class="r"><code class="hljs"><span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:length(Tissue_Tables)){
+  <span class="hljs-keyword">for</span>(j <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:<span class="hljs-number">34</span>){
+    chromname=str_c(c(<span class="hljs-string">"'"</span>,refGenesCoor$chrom[j],<span class="hljs-string">"'"</span>),collapse=<span class="hljs-string">''</span>)
+     sqlstatement = str_c(c(<span class="hljs-string">"select chrom, chromStart, ChromEnd, name from"</span>,Tissue_Tables[i],<span class="hljs-string">"where chrom ="</span>,chromname,<span class="hljs-string">"and chromStart &lt;"</span>,as.character(refGenesCoor$txEnd[j]),<span class="hljs-string">"and chromEnd &gt;"</span>,as.character(refGenesCoor$txStart[j])),collapse = <span class="hljs-string">' '</span>)
+     <span class="hljs-comment">#print(sqlstatement)</span>
+     dbGetQuery(orioncon, sqlstatement) -&gt; read.count
+      Readsdf[j,i]= dim(read.count)[<span class="hljs-number">1</span>]
+  }
+}
+Readsdf</code></pre>
+<pre><code class="hljs">##         Brain Breast Colon Heart Liver LymphNode SkelMuscle Testes
+## ABCC10     93    228   194    55    72       745        205    400
+## ALDH1A2    60    174   158   124    25       206         74   2773
+## APAF1     235     71   131    37    31       147         68    122
+## APC      1719    285   168   303    97       298        387    309
+## CAD       193    489   702    84   171      1059        200   1412
+## CDH1       22    507   600     3   738        60          2    343
+## CTNNB1   2339   2070  2326  1328  1394      2746       1035   3386
+## EGFR       51    769   625    99   197       142        108    497
+## EPHA3      45     52   100    51    16       187         16     77
+## FBXW7    1886    554   167   354   107       392        302    707
+## FLT3        9     13     2     5     2        50          1     19
+## GMPS      165    140   252   102   120       181        320   1473
+## HUWE1    3454   2661  4471  2081  1406      4646       8921   7299
+## KIT       202    359   301    24     8        65         15    152
+## L1CAM    1920     44  6204   114     9       620         44    310
+## NOTCH1    503   2856  3935   353   283      4521        240   1157
+## NPFFR2      3      0     1     1     0         3          0      8
+## NRAS      225    117   115    91   156       166         42    187
+## NTRK2    8317   1793   237   149    16       776        106    681
+## OR4M2       0      0     0     0     0         0          0     11
+## PLK1       17     30    99     7     6       148          2   1174
+## PLOD1     412   1676  4974   682  1796      2799        710   3060
+## PTCH1     296    250   417    98    68       534        127   3230
+## PTPN11    263    480   138   196   110       143        317    189
+## RAPGEF1  1280   3365  3878  1383   906      4607       6491   2750
+## RUNX1     155   1061   370    60   209      1038        231    387
+## RYR3      201    230    99    18    15       147        209    174
+## SMAD4     324    425   716   341   309       689       1034    890
+## SOCS1       3     47   144    28   136       833         19    253
+## ST8SIA3  1189      0     9     0     4         2          0     53
+## TG         60     90   102   180   201      1857         35    196
+## TP53      172    465   518   111   222       640        351    951
+## TP73       10     51     6     8    13       102          2    154
+## VHL       353    289   228   115   199       955        146    649</code></pre>
+<pre class="r"><code class="hljs">row.names(Readsdf)</code></pre>
+<pre><code class="hljs">##  [1] "ABCC10"  "ALDH1A2" "APAF1"   "APC"     "CAD"     "CDH1"    "CTNNB1" 
+##  [8] "EGFR"    "EPHA3"   "FBXW7"   "FLT3"    "GMPS"    "HUWE1"   "KIT"    
+## [15] "L1CAM"   "NOTCH1"  "NPFFR2"  "NRAS"    "NTRK2"   "OR4M2"   "PLK1"   
+## [22] "PLOD1"   "PTCH1"   "PTPN11"  "RAPGEF1" "RUNX1"   "RYR3"    "SMAD4"  
+## [29] "SOCS1"   "ST8SIA3" "TG"      "TP53"    "TP73"    "VHL"</code></pre>
+<p>Readsdf is the dataframe containing the read counts for the different tissues. I have now saved this as a table in GeneRNAseq in my database sm8847_hg19.sqlite.</p>
+<pre class="r"><code class="hljs"><span class="hljs-comment">#dbWriteTable(con,"GeneRNAseq", Readsdf)</span></code></pre>
+<p>#Question 3</p>
+<p>A common way of normalizing RNA-seq data is to calculate TPM (Transcripts per million). To obtain this value :</p>
+<ol style="list-style-type: decimal">
+<li><p>Divide each read count in GeneRNAseq with its corresponding transcript size. To calculate the transcript size you will have to add size of all the exons for the given gene. In refgene you are provided with exonStarts and exonEnds, simply subtract the two and add one for each exon.</p></li>
+<li><p>Now divide each value by the column sum of the corresponding column and multiply by 1 million.</p></li>
+</ol>
+<p>#Answer I have created a function similar to question 1, which takes in the gene name and returns information containing the exonStarts and exonEnds information from the refGene table. In case of more than one rows, only the first is saved.</p>
+<pre class="r"><code class="hljs">getgeneinfo2 = <span class="hljs-keyword">function</span>(gene2) {
+refgene2 = tbl(orioncon, <span class="hljs-string">"refGene"</span>)%&gt;%
+  filter(name2==gene2) %&gt;%
+  select(name,name2,exonCount, exonStarts, exonEnds, chrom) %&gt;% collect()
+<span class="hljs-comment">#refgene2$exonStarts= as.integer(refgene2$exonStarts)</span>
+<span class="hljs-comment">#refgene2$exonEnds= as.integer(refgene2$exonEnds)</span>
+refgene2$exonCount= as.integer(refgene2$exonCount)
+  <span class="hljs-keyword">return</span>(refgene2[<span class="hljs-number">1</span>,])
+}</code></pre>
+<p>refGenestpm is a dataframe which contains the exonStarts and exonEnds information for each of the 34 genes. I used a for loop to fill the empty dataframe refGenestpm with the exonStarts and exonEnds information for the 34 genes.</p>
+<pre class="r"><code class="hljs">refGenestpm&lt;- data.frame(matrix(ncol = <span class="hljs-number">6</span>))
+SS=c(<span class="hljs-string">'name'</span>,<span class="hljs-string">'name2'</span>,<span class="hljs-string">'exonCount'</span>, <span class="hljs-string">'exonStarts'</span>, <span class="hljs-string">'exonEnds'</span>, <span class="hljs-string">'chrom'</span>)
+colnames(refGenestpm) = SS
+<span class="hljs-comment">#refGenestpm[1,]</span>
+<span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:length(cancernames)){
+  refGenestpm[i,]= getgeneinfo2(cancernames[i])
+}
+
+<span class="hljs-comment">#refGenestpm</span></code></pre>
+<p>In order to find the exon length, I have again written a function. This function takes in the exonStarts and exonEnds column information from the refGenestpm table, converts the datatype from a string character to an integer. Then, the exonStarts are subsracted from corresponsing ExonEnds,one is added to each and all these numbers are added together to get the exon length for a single gene.</p>
+<pre class="r"><code class="hljs">exon_length = <span class="hljs-keyword">function</span>(tstart,tend) {
+SS=strsplit(tstart, <span class="hljs-string">","</span>)
+SSS=as.integer(SS[[<span class="hljs-number">1</span>]])
+YY=strsplit(tend, <span class="hljs-string">","</span>)
+YYY= as.integer(YY[[<span class="hljs-number">1</span>]])
+<span class="hljs-comment">#SSS</span>
+<span class="hljs-comment">#YYY</span>
+length= YYY-SSS+<span class="hljs-number">1</span>
+final_length= sum(YYY-SSS+<span class="hljs-number">1</span>)
+  <span class="hljs-keyword">return</span>(final_length)
+}</code></pre>
+<p>Example of how exon_length function works. The exonStarts for the gene ABCC10.</p>
+<pre class="r"><code class="hljs">exon_length(refGenestpm$exonStarts[<span class="hljs-number">1</span>],refGenestpm$exonEnds[<span class="hljs-number">1</span>])</code></pre>
+<pre><code class="hljs">## [1] 5050</code></pre>
+<p>I then used a for loop to get the exon lengths for each of the 34 genes.exon is the dataframe which contains 34 rows. Each row is the exon length for one of the 34 genes.</p>
+<pre class="r"><code class="hljs">exon&lt;- data.frame(matrix(nrow = <span class="hljs-number">34</span>))
+B=c(<span class="hljs-string">"exon_length"</span>)
+colnames(exon) = B
+<span class="hljs-comment">#refGenestpm[1,]</span>
+<span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:length(cancernames)){
+ exon[i,]= exon_length(refGenestpm$exonStarts[i],refGenestpm$exonEnds[i])
+}
+
+exon$exon_length= as.integer(exon$exon_length)
+exon</code></pre>
+<pre><code class="hljs">##    exon_length
+## 1         5050
+## 2         3714
+## 3         4554
+## 4        10818
+## 5         6968
+## 6         4834
+## 7         3735
+## 8         2881
+## 9         5826
+## 10        3921
+## 11        3999
+## 12        2472
+## 13       14825
+## 14        5197
+## 15        5170
+## 16        9340
+## 17        2060
+## 18        4461
+## 19        9202
+## 20        1085
+## 21        2287
+## 22        3192
+## 23        7967
+## 24        1898
+## 25        6109
+## 26        5976
+## 27       15678
+## 28        8783
+## 29        1218
+## 30       10157
+## 31        8501
+## 32        2412
+## 33        5037
+## 34        4563</code></pre>
+<p>I used the sweep function to divide each row of the Readsdf dataframe with the corresponding exon length.</p>
+<pre class="r"><code class="hljs">Normalised1&lt;- sweep(Readsdf,MARGIN=<span class="hljs-number">1</span>,FUN=<span class="hljs-string">"/"</span>,STATS=exon$exon_length)
+view(Normalised1)</code></pre>
+<p>After this, I used the apply function to get column sums and divide each column with the column sum and then multiplied the elemensts resulting dataframe with 1000000. Normalised_Dataframe is the final normalised dataframe.</p>
+<pre class="r"><code class="hljs">Normalised2 &lt;- apply(Normalised1, <span class="hljs-number">2</span>, <span class="hljs-keyword">function</span>(i) i/sum(i))
+Normalised_Data&lt;-Normalised2*<span class="hljs-number">1000000</span>
+Normalised_Dataframe=data.frame(Normalised_Data)
+Normalised_Dataframe</code></pre>
+<pre><code class="hljs">##               Brain      Breast        Colon       Heart       Liver
+## ABCC10    4596.5747  11138.2043   6104.50520   6840.5901   7041.0456
+## ALDH1A2   4032.2932  11557.9033   6760.13399  20970.1743   3324.2536
+## APAF1    12880.0511   3846.2458   4571.07541   5103.0633   3361.7445
+## APC      39661.7296   6499.3450   2467.75716  17592.1089   4428.1344
+## CAD       6913.4037  17313.0039  16009.17995   7571.7000  12119.4805
+## CDH1      1135.9489  25874.5629  19723.53343    389.7955  75395.5567
+## CTNNB1  156308.4173 136726.1069  98959.89378 223321.0820 184318.1930
+## EGFR      4418.4472  65849.8500  34472.82505  21583.1183  33769.0625
+## EPHA3     1927.9012   2201.9354   2727.53063   5498.2179   1356.2681
+## FBXW7   120057.0302  34856.5686   6767.99057  56705.9557  13476.6817
+## FLT3       561.7381    801.9802     79.47284    785.3095    246.9873
+## GMPS     16660.1239  13971.7652  16199.14865  25916.3574  23973.3550
+## HUWE1    58152.7666  44281.4549  47923.67166  88165.6944  46836.7396
+## KIT       9701.5562  17041.7206   9203.51861   2900.5528    760.2095
+## L1CAM    92694.3868   2099.5868 190687.12120  13849.5787    859.7021
+## NOTCH1   13441.9990  75436.7615  66948.05692  23738.3257  14963.5830
+## NPFFR2     363.4936      0.0000     77.13880    304.8983      0.0000
+## NRAS     12589.0525   6470.3139   4096.43184  12812.4276  17269.8439
+## NTRK2   225593.8327  48069.5182   4092.66534  10170.1251    858.6848
+## OR4M2        0.0000      0.0000      0.00000      0.0000      0.0000
+## PLK1      1855.3485   3236.1363   6878.74399   1922.4459   1295.6304
+## PLOD1    32216.4055 129533.7207 247618.45782 134197.2902 277868.6085
+## PTCH1     9273.4139   7741.3535   8317.28061   7725.9788   4215.1218
+## PTPN11   34586.1556  62390.2518  11553.75076  64860.7726  28621.5081
+## RAPGEF1  52297.7006 135889.7352 100873.66399 142191.7206  73240.9736
+## RUNX1     6473.8683  43800.2414   9838.55350   6306.1299  17271.5667
+## RYR3      3199.9865   3619.1692   1003.42438    721.1143    472.4944
+## SMAD4     9207.5668  11937.6202  12954.18980  24385.6171  17374.4727
+## SOCS1      614.7757   9519.6784  18786.90849  14438.8631  55142.6530
+## ST8SIA3  29218.5831      0.0000    140.80471      0.0000    194.4870
+## TG        1761.6677   2611.8258   1906.64690  13299.1763  11676.7526
+## TP53     17798.9299  47560.6037  34126.56467  28904.6643  45453.9581
+## TP73       495.5310   2497.8706    189.28640    997.5629   1274.5810
+## VHL      19309.3203  15624.9661   7940.07298  15829.5885  21537.6663
+##           LymphNode   SkelMuscle      Testes
+## ABCC10   24672.1274  12844.90223  10893.9872
+## ALDH1A2   9276.1342   6304.60875 102689.5423
+## APAF1     5398.4118   4724.80845   3684.5551
+## APC       4606.9234  11319.63199   3928.5271
+## CAD      25417.3063   9082.18144  27870.5027
+## CDH1      2075.8038    130.91568   9759.0091
+## CTNNB1  122956.5391  87683.53772 124685.1108
+## EGFR      8243.0283  11861.75139  23726.3744
+## EPHA3     5368.0040    868.99609   1817.7682
+## FBXW7    16719.7942  24371.28457  24799.3798
+## FLT3      2091.0302     79.12558    653.4622
+## GMPS     12245.3672  40960.93221  81954.4478
+## HUWE1    52411.4539 190408.86200  67715.3160
+## KIT       2091.7142    913.28613   4022.6210
+## L1CAM    20055.9321   2692.96342   8246.8747
+## NOTCH1   80952.3265   8130.78890  17037.4554
+## NPFFR2     243.5543      0.00000    534.1227
+## NRAS      6223.2546   2979.10210   5765.3759
+## NTRK2    14103.3147   3644.95320  10178.4848
+## OR4M2        0.0000      0.00000   1394.3802
+## PLK1     10822.7407    276.71465  70602.5164
+## PLOD1   146649.8826  70382.35368 131848.9853
+## PTCH1    11209.5491   5044.02492  55760.4093
+## PTPN11   12600.3188  52848.34290  13695.6877
+## RAPGEF1 126121.6927 336209.36322  61912.8529
+## RUNX1    29048.8182  12231.21812   8906.7369
+## RYR3      1568.0806   4218.16871   1526.4298
+## SMAD4    13119.5229  37251.68965  13936.8739
+## SOCS1   114377.1885   4935.99411  28568.7659
+## ST8SIA3     32.9311      0.00000    717.6764
+## TG       36532.8532   1302.76580   3171.0589
+## TP53     44375.6139  46046.65990  54227.7345
+## TP73      3386.6469    125.63955   4205.0099
+## VHL      35002.1407  10124.43292  19561.9649</code></pre>
+<p>#Question 4 Calculate the average gene expression for each gene. Which gene has the</p>
+<p>highest average expression across all samples?</p>
+<ol style="list-style-type: lower-alpha">
+<li>(Highest row mean)</li>
+</ol>
+<pre class="r"><code class="hljs">Average_Gene_Expression=rowMeans(Normalised_Dataframe)
+view(Average_Gene_Expression)</code></pre>
+<pre class="r"><code class="hljs">max(Average_Gene_Expression)</code></pre>
+<pre><code class="hljs">## [1] 146289.5</code></pre>
+<pre class="r"><code class="hljs">row.names(Normalised_Dataframe)</code></pre>
+<pre><code class="hljs">##  [1] "ABCC10"  "ALDH1A2" "APAF1"   "APC"     "CAD"     "CDH1"    "CTNNB1" 
+##  [8] "EGFR"    "EPHA3"   "FBXW7"   "FLT3"    "GMPS"    "HUWE1"   "KIT"    
+## [15] "L1CAM"   "NOTCH1"  "NPFFR2"  "NRAS"    "NTRK2"   "OR4M2"   "PLK1"   
+## [22] "PLOD1"   "PTCH1"   "PTPN11"  "RAPGEF1" "RUNX1"   "RYR3"    "SMAD4"  
+## [29] "SOCS1"   "ST8SIA3" "TG"      "TP53"    "TP73"    "VHL"</code></pre>
+<pre class="r"><code class="hljs">apply(Normalised_Dataframe, <span class="hljs-number">1</span>,mean)</code></pre>
+<pre><code class="hljs">##      ABCC10     ALDH1A2       APAF1         APC         CAD        CDH1 
+##  10516.4921  20614.3805   5446.2444  11313.0197  15287.0948  16810.6408 
+##      CTNNB1        EGFR       EPHA3       FBXW7        FLT3        GMPS 
+## 141869.8601  25490.5571   2720.8277  37219.3357    662.3882  28985.1872 
+##       HUWE1         KIT       L1CAM      NOTCH1      NPFFR2        NRAS 
+##  74486.9949   5829.3974  41398.2682  37581.1621    190.4010   8525.7253 
+##       NTRK2       OR4M2        PLK1       PLOD1       PTCH1      PTPN11 
+##  39588.9473    174.2975  12111.2846 146289.4630  13660.8915  35144.5985 
+##     RAPGEF1       RUNX1        RYR3       SMAD4       SOCS1     ST8SIA3 
+## 128592.2129  16734.6416   2041.1085  17520.9441  30798.1034   3788.0603 
+##          TG        TP53        TP73         VHL 
+##   9032.8434  39811.8411   1646.5160  18116.2691</code></pre>
+<p>#Answer: Highest row mean is 146289.5 which is for the gene PLOD1</p>
+<div id="question-5" class="section level1">
+<h1>Question 5</h1>
+<p>For this gene(with the highest gene expression), create a barplot showing the level of expression for each sample. I used filter to get the normalised reads for PLOD1. and then created a barplot.</p>
+<pre class="r"><code class="hljs">Highest_Expression= Normalised_Dataframe %&gt;% filter(row.names(Normalised_Dataframe)== <span class="hljs-string">"PLOD1"</span>)%&gt;% collect()
+Highest_Expression= as.numeric(Highest_Expression)
+Highest_Expression</code></pre>
+<pre><code class="hljs">## [1]  32216.41 129533.72 247618.46 134197.29 277868.61 146649.88  70382.35
+## [8] 131848.99</code></pre>
+<pre class="r"><code class="hljs">colnames(Normalised_Dataframe)</code></pre>
+<pre><code class="hljs">## [1] "Brain"      "Breast"     "Colon"      "Heart"      "Liver"     
+## [6] "LymphNode"  "SkelMuscle" "Testes"</code></pre>
+<pre class="r"><code class="hljs">barplot(Highest_Expression, names= colnames(Normalised_Dataframe), cex.names = <span class="hljs-number">0.5</span>)</code></pre>
+<p><img src="./Assignment3_AppliedGen_sm8847_files/unnamed-chunk-29-1.png" width="672"></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+
+
+</body></html>

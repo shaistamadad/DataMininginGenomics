@@ -1,0 +1,367 @@
+---
+title: "Assignment3_AppliedGen_sm8847"
+author: "shaistamadad"
+date: "3/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+#Question 1
+1. For all the genes in the cancerGenes.names.txt file,  identify their name, name2, chromosome, strand, transcription start and transcription end coordinates. This information is available in the table refGene. Save this dataframe as refGenesCoor 
+
+** note, the name field is the refgene name, however the names provided in the files are found in the name2 field of the refGene table. 
+
+** note that there will be several rows that contain a match to some genes. This is because there are multiple transcripts from the same locus. In such cases ONLY keep the first row. 
+
+#Answer
+
+```{r}
+library(RMariaDB)   # I will need these packages to establish a connection to the database server 
+library(tidyverse)
+```
+
+```{r}
+orioncon<-dbConnect(RMariaDB::MariaDB(),
+host="orion.bio.nyu.edu",password="mkatari@nyu",
+user="ga1009",db="hg19"
+)
+```
+
+
+I have saved the table refGene from the database in a variable called refgene 
+
+```{r}
+refgene = tbl(orioncon, "refGene")
+refgene$txStart= as.numeric(refgene$txStart)
+refgene$txEnd= as.numeric(refgene$txStart)
+refgene
+```
+
+
+I was having trouble reading in the text file initally so manually created a vector with all the cancer names. 
+
+```{r}
+cancernames=c('ABCC10',
+'ALDH1A2',
+'APAF1',
+'APC',
+'CAD',
+'CDH1',
+'CTNNB1',
+'EGFR',
+'EPHA3',
+'FBXW7',
+'FLT3',
+'GMPS',
+'HUWE1',
+'KIT',
+'L1CAM',
+'NOTCH1',
+'NPFFR2','NRAS','NTRK2',
+'OR4M2',
+'PLK1',
+'PLOD1',
+'PTCH1',
+'PTPN11',
+'RAPGEF1',
+'RUNX1',
+'RYR3',
+'SMAD4',
+'SOCS1',
+'ST8SIA3',
+'TG',
+'TP53',
+'TP73',
+'VHL')
+```
+
+
+Read in the textfile with gene names anyway, but I haven't used this in the code. 
+
+```{r}
+library(readr)
+cancerGenes_txt <- read_csv("cancerGenes.txt.txt", 
+    col_names = FALSE)
+View(cancerGenes_txt)
+```
+
+
+In order to create the refGenesCoor dataframe containing the containing the required information for the genes in the text file, I first wrote a function called getgeneinfo, which takes as an input the name of the gene, and returns the required information in the Question 1. I then created an empty dataframe called refGenesCoor with the six columns for the required information. I then used a foor loop to run the function on each of the 34 genes. 
+
+
+
+```{r}
+getgeneinfo = function(gene) {
+refgene = tbl(orioncon, "refGene")%>%
+  filter(name2==gene) %>%
+  select(name,name2,txStart,txEnd, chrom,strand) %>% collect()
+refgene$txEnd= as.integer(refgene$txEnd)
+refgene$txStart= as.integer(refgene$txStart)
+  return(refgene[1,])
+}
+```
+
+It was important to convert exEnd and txStart to integers, otherwise the correct txEnd and txStart numbers did not appear in the final refGenesCoor dataframe. 
+
+
+
+```{r}
+refGenesCoor<- data.frame(matrix(ncol = 6))   #empty dataframe with the six columns 
+X=c('name','name2','txStart','txEnd', 'chrom','strand') # names for my dataframe columns, corresponding to the 6 attributes from the table refGene 
+colnames(refGenesCoor) = X
+#refGenesCoor[1,]
+for (i in 1:length(cancernames)){
+  refGenesCoor[i,]= getgeneinfo(cancernames[i])
+}
+
+refGenesCoor
+```
+
+After I have created my refGenesCoor dataframe, I connected to SQLite, created a database called sm8847_hg19.sqlite and added refGenesCoor as one of my tables. 
+
+
+```{r}
+library("RSQLite")    # need to call the RSQLite library to create a database via R. 
+drv<-dbDriver("SQLite")
+con<-dbConnect(drv, "sm8847_hg19.sqlite")    # I have now created a database, I will next add the tables, dbConnect helped me connect to my database via R 
+con
+```
+
+```{r}
+#dbWriteTable(con, "refGenesCoor", refGenesCoor)
+```
+
+I have commented out the dbWriteTable command since it only needs to be given once, and will cause issues during knitting the RMD file otherwise as all the code gets run during knitting. If this command is run again, it will potentially overwrite the already existing table in the sm8847_hg19.sqlite database. 
+
+#Question 2
+
+ For each gene, determine the number of reads that map to the different tissues. The sequence reads are stored in tables that begin with “burge”. Each row in a given table is one read and it contains the coordinates of the match. So you can simply count the number of rows that are returned when asking for all reads that match within the coordinates of a gene.
+
+Save this information in a data frame where each row is the gene and each column is a different tissue type. Save this dataframe as GeneRNAseq and add it to your hg19.sqlite database as a table. 
+
+
+#Answer 
+First I created an empty dataframe with 8 columns and 34 rows. Each column will represent reads for each gene from one of the 8 tables. Each row represents one of the 34 genes. 
+
+```{r}
+Readsdf<- data.frame(matrix(ncol = 8, nrow = 34))
+row.names(Readsdf)= cancernames
+colnames(Readsdf) = c('Brain', 'Breast', 'Colon', 'Heart', 'Liver', 'LymphNode', 'SkelMuscle', 'Testes')  # corresponding to the tissue type
+#Readsdf
+```
+
+
+
+
+```{r}
+dbGetQuery(orioncon, "show tables") -> hg19.tables   # I only need the first 8 tables 
+hg19.tables
+```
+
+
+
+
+```{r}
+Tissue_Tables=grep("burge", hg19.tables[,1],
+     value=T)  # I used the grep command to get tables starting with burge. I will need this table list for the next step
+Tissue_Tables
+```
+
+
+
+Here, I have used a double loop. For each of the 8 tables in the database, I have run an sql query. In this query, I have asked for all the rows in the given table corresponding to the gene. The second loop uses the dataframe regGenesCoor from question 1 to get the gene coordinates for all 34 genes. read.count is the sql query result, which is the rows from the tissue table fitting the where criteria. In the end, the row number of the red.count, represented by dim(read.count)[1] is saved in the Readsdf dataframe for each gene. 
+
+
+```{r}
+for (i in 1:length(Tissue_Tables)){
+  for(j in 1:34){
+    chromname=str_c(c("'",refGenesCoor$chrom[j],"'"),collapse='')
+     sqlstatement = str_c(c("select chrom, chromStart, ChromEnd, name from",Tissue_Tables[i],"where chrom =",chromname,"and chromStart <",as.character(refGenesCoor$txEnd[j]),"and chromEnd >",as.character(refGenesCoor$txStart[j])),collapse = ' ')
+     #print(sqlstatement)
+     dbGetQuery(orioncon, sqlstatement) -> read.count
+      Readsdf[j,i]= dim(read.count)[1]
+  }
+}
+Readsdf
+```
+```{r}
+row.names(Readsdf)
+```
+
+
+Readsdf is the dataframe containing the read counts for the different tissues. I have now saved this as a table in GeneRNAseq in my database sm8847_hg19.sqlite.
+
+
+```{r}
+#dbWriteTable(con,"GeneRNAseq", Readsdf)
+```
+
+
+
+#Question 3 
+
+ A common way of normalizing RNA-seq data is to calculate TPM (Transcripts per million). To obtain this value : 
+
+1. Divide each read count in GeneRNAseq with its corresponding transcript size. To calculate the transcript size you will have to add size of all the exons for the given gene. In refgene you are provided with exonStarts and exonEnds, simply subtract the two and add one for each exon.
+
+2. Now divide each value by the column sum of the corresponding column and multiply by 1 million.
+
+
+
+
+#Answer 
+I have created a function similar to question 1, which takes in the gene name and returns information containing the exonStarts and exonEnds information from the refGene table. In case of more than one rows, only the first is saved. 
+
+
+```{r}
+getgeneinfo2 = function(gene2) {
+refgene2 = tbl(orioncon, "refGene")%>%
+  filter(name2==gene2) %>%
+  select(name,name2,exonCount, exonStarts, exonEnds, chrom) %>% collect()
+#refgene2$exonStarts= as.integer(refgene2$exonStarts)
+#refgene2$exonEnds= as.integer(refgene2$exonEnds)
+refgene2$exonCount= as.integer(refgene2$exonCount)
+  return(refgene2[1,])
+}
+```
+
+
+refGenestpm is a dataframe which contains the exonStarts and exonEnds information for each of the 34 genes. I used a for loop to fill the empty dataframe refGenestpm with the exonStarts and exonEnds information  for the 34 genes. 
+
+
+
+```{r}
+refGenestpm<- data.frame(matrix(ncol = 6))
+SS=c('name','name2','exonCount', 'exonStarts', 'exonEnds', 'chrom')
+colnames(refGenestpm) = SS
+#refGenestpm[1,]
+for (i in 1:length(cancernames)){
+  refGenestpm[i,]= getgeneinfo2(cancernames[i])
+}
+
+refGenestpm
+```
+
+
+
+In order to find the exon length, I have again written a function. This function takes in the exonStarts and exonEnds column information from the refGenestpm table, converts the datatype from a string character to an integer. Then, the exonStarts are subsracted from  corresponsing ExonEnds,one is added to each and all these numbers are added together to get the exon length for a single gene.  
+
+
+```{r}
+exon_length = function(tstart,tend) {
+SS=strsplit(tstart, ",")
+SSS=as.integer(SS[[1]])
+YY=strsplit(tend, ",")
+YYY= as.integer(YY[[1]])
+#SSS
+#YYY
+length= YYY-SSS+1
+final_length= sum(YYY-SSS+1)
+  return(final_length)
+}
+```
+
+
+
+Example of how exon_length function works. The exonStarts for the gene ABCC10.
+
+```{r}
+exon_length(refGenestpm$exonStarts[1],refGenestpm$exonEnds[1])
+```
+
+I then used a for loop to get the exon lengths for each of the 34 genes.exon is the dataframe which contains 34 rows. Each row is the exon length for one of the 34 genes. 
+
+
+
+```{r}
+exon<- data.frame(matrix(nrow = 34))
+B=c("exon_length")
+colnames(exon) = B
+#refGenestpm[1,]
+for (i in 1:length(cancernames)){
+ exon[i,]= exon_length(refGenestpm$exonStarts[i],refGenestpm$exonEnds[i])
+}
+
+exon$exon_length= as.integer(exon$exon_length)
+exon
+```
+
+
+I used the sweep function to divide each row of the Readsdf dataframe with the corresponding exon length. 
+
+```{r}
+Normalised1<- sweep(Readsdf,MARGIN=1,FUN="/",STATS=exon$exon_length)
+view(Normalised1)
+```
+
+
+After this, I used the apply function to get column sums and divide each column with the column sum and then multiplied the elemensts  resulting dataframe with 1000000. Normalised_Dataframe is the final normalised dataframe. 
+
+```{r}
+Normalised2 <- apply(Normalised1, 2, function(i) i/sum(i))
+Normalised_Data<-Normalised2*1000000
+Normalised_Dataframe=data.frame(Normalised_Data)
+Normalised_Dataframe
+```
+
+
+#Question 4
+Calculate the average gene expression for each gene. Which gene has the 
+
+highest average expression across all samples? 
+
+a. (Highest row mean) 
+
+
+
+```{r}
+Average_Gene_Expression=rowMeans(Normalised_Dataframe)
+view(Average_Gene_Expression)
+```
+
+
+
+
+```{r}
+max(Average_Gene_Expression)
+```
+
+```{r}
+row.names(Normalised_Dataframe)
+```
+
+
+```{r}
+apply(Normalised_Dataframe, 1,mean)
+```
+
+
+#Answer: 
+Highest row mean is 146289.5 which is for the gene PLOD1
+
+# Question 5
+For this gene(with the highest gene expression), create a barplot showing the level of expression for each sample.
+I used filter to get the normalised reads for PLOD1. and then created a barplot. 
+
+```{r}
+Highest_Expression= Normalised_Dataframe %>% filter(row.names(Normalised_Dataframe)== "PLOD1")%>% collect()
+Highest_Expression= as.numeric(Highest_Expression)
+Highest_Expression
+```
+
+
+```{r}
+colnames(Normalised_Dataframe)
+```
+
+
+
+```{r}
+barplot(Highest_Expression, names= colnames(Normalised_Dataframe), cex.names = 0.5)
+```
+
