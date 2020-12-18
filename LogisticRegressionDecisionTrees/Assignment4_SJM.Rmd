@@ -1,0 +1,906 @@
+---
+title: "Assignment4_BDBM"
+author: "shaistamadad"
+date: "4/9/2020"
+output: html_document
+---
+
+```{r}
+library(readr)
+cancer_data <- read_csv("data.csv",col_names = TRUE) 
+```
+```{r}
+cancer_data= as.data.frame(cancer_data)
+```
+
+```{r}
+summary(cancer_data)
+```
+
+##1. Create a boxplot for each variable to visualize the distribution of the values between malignant and benign samples. Which of the four variables will be most accurate in predicting by itself ? Explain why. (Hint – try creating boxplots)
+
+```{r}
+library(ggplot2)  #need this for making boxplots 
+```
+
+
+```{r}
+ggplot(cancer_data, aes(x=diagnosis, y=radius_mean)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+
+
+
+
+
+```{r}
+ggplot(cancer_data, aes(x=diagnosis, y=texture_mean)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+
+
+
+```{r}
+ggplot(cancer_data, aes(x=diagnosis, y=smoothness_mean)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+
+
+```{r}
+ggplot(cancer_data, aes(x=diagnosis, y=compactness_mean)) + 
+  geom_boxplot(notch=TRUE,outlier.colour="red", outlier.shape=1,
+                outlier.size=3)
+```
+
+
+## Answer Question 2: Radius is most accurate in predicting by itself because it has the least overlap between the inter-quantile range in the benign and malignant conditions, which gives the highest confidence fot this variable out of the four that the medians differ between the two conditions (benign and malignant). Radius also has the least number of outliers. 
+
+
+
+
+
+
+
+
+
+##2. Randomly remove 20% of our data and save it as test_set and the other 80% as training_set.
+#a. Make sure your test_set and training_set datasets will have the same proportion of Benign and Malignant
+Note: I interpreted both sets (test_test and training_set) having same proportion of benign and malignant tumour as both sets having roughly 1:1 ratio for benign: malignant 
+
+```{r}
+cancer_data[,"diagnosis"] = as.factor(cancer_data[,"diagnosis"])
+```
+
+
+
+A quick inspection of the data reveals that the dataset is  unbalanced. This can create a bias in the model by putting more weight on the population that is better represented, in this case benign. In order to balance the dataset, I will select equal number of patients, randomly, from both diagnosis levels. 
+
+```{r}
+table(cancer_data[,"diagnosis"])  # more benign, this will bring a bias in the model 
+```
+
+
+```{r}
+allMalignant<-cancer_data[which(cancer_data[,"diagnosis"] == 'M'),] # choose all the data with maligant diagnosis 
+allBenign<-cancer_data[which(cancer_data[,"diagnosis"] == 'B'),]   # choose all the data with benign diagnosis 
+sample(1:nrow(allBenign), nrow(allMalignant))->rand.0  # sample from the benign vector number of variables = 212, which is the number of malignant data points 
+allBenign[rand.0,]->benign  # 212 benign data points
+allMalignant -> malignant  #212 malignant points 
+```
+
+
+
+```{r}
+training.split<-rbind(malignant, benign)  #combine the 212 benign and 212 malignant 
+training.split$diagnosis <- ifelse(training.split$diagnosis =="M",1,0) # convert M into 1s, B into 0s
+split<-sample(nrow(training.split), floor(nrow(training.split) * 0.8), replace = FALSE) #choose 80 percent of this balanced dataset
+split.train<-training.split[split,] # 80 percent chosen as training dataset 
+split.test<-training.split[-split,] # 20 percent chosen as test dataset 
+```
+
+
+
+```{r}
+table(split.test[,"diagnosis"])  # equal ratio of benign and malignant in test dataset 
+```
+
+```{r}
+table(split.train[,"diagnosis"]) # equal proportion of benign and malignant in training dataset
+```
+
+
+
+
+
+#3. Using the training_set, create a logistic regression model using the glm() function described in our lecture to create a model for each variable separately.
+
+##a. Calculate accuracy, recall, and true negative rate using the test_set to determine which of the four variables is the most helpful predictor.
+
+
+
+
+```{r}
+lr.split<-glm(formula = diagnosis~ radius_mean,
+              family="binomial",
+              data=split.train)
+pr.split<-predict(lr.split, newdata=split.test, type="response")
+pr.perf = pr.split 
+pr.perf[pr.split>0.5]=1 
+pr.perf[pr.split<=0.5]=0 
+confmat<-table(split.test[,"diagnosis"], 
+               pr.perf, 
+               dnn=c("actual", "predicted")) 
+confmat
+```
+
+
+From the prediction results, a probability greater than 0.5 will most likely be dead (have a value of 1). Using this cutoﬀ, a predicted result vector can be created names pr.perf which can be compared to the actual result. 
+
+TP: True positive: Predictions of TRUE event and it is actually TRUE
+TN: True negative: Prediction of FALSE event and it is actually FALSE.
+FP: False positive: Prediction of TRUE even, but it is actually FALSE.
+FN: False negative: Prediction of FALSE even and it is TRUE
+
+accuracy: total number of correct predictions divided by all possible predictions and events.
+recall: of all actual TRUE events, how many were predicted to be TRUE. Also known as Sensitivity and TPR (true positive rate)
+precision: of all predicted TRUE, how many were actually true
+TNR: True negative rate: Of all actual FALSE events, how many were predicted FALSE. Also known as Specificity
+
+#Accuracy, Recall and True Negative Rate for radius_mean variable 
+Note: I have assigned binary value 0 to benign diagnosis and 1 to malignant diagnosis 
+```{r}
+TP=confmat["1","1"]  #True Positive for malignant diagnosis diagnosis
+TN=confmat["0","0"]  #True Negative for malignant diagnosis 
+FP=confmat["0","1"]  #False Postive for malignant diagnosis 
+FN=confmat["1","0"]   #False negatve for malignant diagnosis
+
+accuracy = (TP+TN)/(TP+TN+FP+FN)
+accuracy
+```
+
+
+```{r}
+recall = TP/(TP+FN)
+recall
+```
+
+
+```{r}
+precision = TP/(TP+FP)
+precision
+```
+
+```{r}
+TNR = TN/(TN+FP)
+TNR
+```
+
+##Comment: The accuracy, recall and TNR are farily high for radius 
+
+
+```{r}
+lr.split1<-glm(formula = diagnosis~ texture_mean,
+              family="binomial",
+              data=split.train)  # train the model using the training set 
+pr.split1<-predict(lr.split1, newdata=split.test, type="response")  # make predicitions on the test set 
+pr.perf1 = pr.split1 
+pr.perf1[pr.split1>0.5]=1 # convert values with probablities greater than 0.5 into 1, representing malignant diagnosis 
+pr.perf1[pr.split1<=0.5]=0 # convert values with probabilities less than or equal to 0.5 into 0, representing benign diagnosis 
+confmat1<-table(split.test[,"diagnosis"], 
+               pr.perf1, 
+               dnn=c("actual", "predicted")) 
+confmat1
+```
+
+
+
+
+
+#Accuracy, Recall and True Negative Rate for texture_mean
+Note: I have assigned binary value 0 to benign diagnosis and 1 to malignant diagnosis 
+```{r}
+TP1=confmat1["1","1"]  #True Positive for malignant diagnosis diagnosis
+TN1=confmat1["0","0"]  #True Negative for malignant diagnosis 
+FP1=confmat1["0","1"]  #False Postive for malignant diagnosis 
+FN1=confmat1["1","0"]   #False negatve for malignant diagnosis
+
+accuracy1 = (TP1+TN1)/(TP1+TN1+FP1+FN1)
+accuracy1
+```
+
+
+```{r}
+recall1 = TP1/(TP1+FN1)
+recall1
+```
+
+
+```{r}
+precision1 = TP1/(TP1+FP1)
+precision1
+```
+
+
+
+```{r}
+TNR1 = TN1/(TN1+FP1)
+TNR1
+```
+#Comment: Low values for accuracy, recall and precision compared with radius_mean model 
+
+```{r}
+lr.split2<-glm(formula = diagnosis~ smoothness_mean,
+              family="binomial",
+              data=split.train)
+pr.split2<-predict(lr.split2, newdata=split.test, type="response")
+pr.perf2 = pr.split2 
+pr.perf2[pr.split2>0.5]=1 
+pr.perf2[pr.split2<=0.5]=0 
+confmat2<-table(split.test[,"diagnosis"], 
+               pr.perf2, 
+               dnn=c("actual", "predicted")) 
+confmat2
+```
+
+
+
+
+#Accuracy, Recall and True Negative Rate for smoothness_mean variable 
+Note: I have assigned binary value 0 to benign diagnosis and 1 to malignant diagnosis 
+```{r}
+TP2=confmat2["1","1"]  #True Positive for malignant diagnosis diagnosis
+TN2=confmat2["0","0"]  #True Negative for malignant diagnosis 
+FP2=confmat2["0","1"]  #False Postive for malignant diagnosis 
+FN2=confmat2["1","0"]   #False negatve for malignant diagnosis
+
+accuracy2 = (TP2+TN2)/(TP2+TN2+FP2+FN2)
+accuracy2
+```
+
+
+```{r}
+recall2 = TP2/(TP2+FN2)
+recall2
+```
+
+
+```{r}
+precision2 = TP2/(TP2+FP2)
+precision2
+```
+
+
+```{r}
+TNR2 = TN2/(TN2+FP2)
+TNR2
+```
+##Comment: low accuracy, precision and recall scores compared with model with radius_mean variable , and texture_mean model 
+
+
+```{r}
+lr.split3<-glm(formula = diagnosis~ compactness_mean,
+              family="binomial",
+              data=split.train)
+pr.split3<-predict(lr.split3, newdata=split.test, type="response")
+pr.perf3 = pr.split3 
+pr.perf3[pr.split3>0.5]=1 
+pr.perf3[pr.split3<=0.5]=0 
+confmat3<-table(split.test[,"diagnosis"], 
+               pr.perf3, 
+               dnn=c("actual", "predicted")) 
+confmat3
+```
+
+#Accuracy, Recall and True Negative Rate for compactness_mean variable 
+Note: I have assigned binary value 0 to benign diagnosis and 1 to malignant diagnosis 
+```{r}
+TP3=confmat3["1","1"]  #True Positive for malignant diagnosis diagnosis
+TN3=confmat3["0","0"]  #True Negative for malignant diagnosis 
+FP3=confmat3["0","1"]  #False Postive for malignant diagnosis 
+FN3=confmat3["1","0"]   #False negatve for malignant diagnosis
+
+accuracy3 = (TP3+TN3)/(TP3+TN3+FP3+FN3)
+accuracy3
+```
+
+
+```{r}
+recall3 = TP3/(TP3+FN3)
+recall3
+```
+
+
+```{r}
+precision3 = TP3/(TP3+FP3)
+precision3
+```
+
+
+```{r}
+TNR3 = TN3/(TN3+FP3)
+TNR3
+```
+
+
+
+##comment: low  values of accuracy, recall and TNR for compactness model compared with radius model 
+
+
+#4. Repeat step 3 but this time with all the variables together. Does this improve the performance ? What conclusions can you draw from the coefficients?
+
+
+
+
+
+
+#Model with all 4 variables 
+
+```{r}
+lr.split4<-glm(formula = diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,
+              family="binomial",
+              data=split.train)   #use the glm model to fit the data 
+pr.split4<-predict(lr.split4, newdata=split.test, type="response") # now use the model co-efficients to predict the diagnosis for the test data. note that this gives p-values for benign tumour diagnosis 
+pr.perf4 = pr.split4 
+pr.perf4[pr.split4>0.5]=1  # if p value is greater than 0.5, then assign that as 1, which is malignant diagnosis 
+pr.perf4[pr.split4<=0.5]=0  # if p value is less than or equal to 0.5, assign that 0, which is benign diagnosis 
+confmat4<-table(split.test[,"diagnosis"], 
+               pr.perf4, 
+               dnn=c("actual", "predicted")) 
+confmat4
+```
+
+
+
+
+
+#Accuracy, Recall and True Negative Rate \
+Note: I have assigned binary value 0 to benign diagnosis and 1 to malignant diagnosis 
+```{r}
+TP4=confmat4["1","1"]  #True Positive for malignant diagnosis diagnosis
+TN4=confmat4["0","0"]  #True Negative for malignant diagnosis 
+FP4=confmat4["0","1"]  #False Postive for malignant diagnosis 
+FN4=confmat4["1","0"]   #False negatve for malignant diagnosis
+
+accuracy4 = (TP4+TN4)/(TP4+TN4+FP4+FN4)
+accuracy4
+```
+
+
+```{r}
+recall4= TP4/(TP4+FN4)
+recall4
+```
+
+
+```{r}
+precision4 = TP4/(TP4+FP4)
+precision4
+```
+
+The accuracy, recall and precision scores are higher when we use all four variables, compared with using only one variable, although note that radius_mean model has high accuracy, recall and precision scores than the other three single variable models. However, the combined model outperforms the only radius_mean model
+
+
+#Part 2: Using a decision tree.
+##5. Which variable do you expect to be at the root of the decision tree? Explain your answer and use a graph to support your answer.
+
+
+
+I expect radius to be at the root of the decision tree. This is because a decision tree starts with a variable which has the highest information gain. I expect radius to have the highest information gain. 
+For each node of the tree, the information value measures how much information a feature gives us about the class. The split with the highest information gain will be taken as the first split and the process will continue until all children nodes are pure, or until the information gain is 0.
+
+The model in question 3 with only radius_mean as the explanatory variable had highest  accuracy, recall and true negtative rates  compared with the other variables. This suggests that radius gives the most information about diagnosis. I will calculate the information gain for each of the four variables, and the one with the highest value should be at the root of the decision tree.
+
+
+```{r}
+ barplot(c(accuracy,accuracy1,accuracy2,accuracy3),log="y",names.arg=c("radius","texture","smoothness","compactness"), col = "red", main="Accuracy scores for the different single-variable models") # radius_mean has the highest accuracy
+```
+
+
+```{r}
+library(CORElearn) # need this package to calculate the information gain 
+```
+
+
+```{r}
+Information_Gain1= attrEval(diagnosis ~radius_mean+texture_mean+smoothness_mean+ compactness_mean,
+              data=cancer_data, estimator = "InfGain")
+Information_Gain1
+```
+
+```{r}
+IG_FD=data.frame(Information_Gain1)
+IG_FD$Information_Gain1= as.numeric(IG_FD$Information_Gain1)
+rownames(IG_FD)
+```
+
+```{r}
+par(mar=c(5,8,4,2))
+barplot(IG_FD$Information_Gain1, names.arg = rownames(IG_FD), col = "black", main  = 'Information Gain for Different Variables', ylim = c(0,0.7))
+```
+
+#Question 5 Answer: As the information gain for radius (0.46298625) is highest, from the bar plot graph, it will be at the root of the decision tree. 
+
+
+
+##6. Using the same training_set and test_set perform a decision tree using the “Party” package.
+
+
+
+```{r}
+library("party")  #need this package to perform decision tree
+```
+
+
+
+```{r}
+split.train1=split.train
+split.train1$diagnosis <- ifelse(split.train1$diagnosis==1,"M","B") # I had converted the training set data diagnosis to binary values, reconverted them to M and B, and then converted to factors and saved in a new vector called split.train1 to avoid confusion 
+split.train1$diagnosis= as.factor(split.train1$diagnosis)
+split.test1= split.test
+split.test1$diagnosis <- ifelse(split.test1$diagnosis==1,"M","B")
+split.test1$diagnosis= as.factor(split.test1$diagnosis)
+```
+
+```{r}
+Disease.fit<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1)
+plot(Disease.fit)
+```
+
+
+
+
+```{r}
+results3r = predict(Disease.fit, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat<-table(split.test1[,"diagnosis"],results3r,dnn=c("actual","predicted"))
+results3p = predict(Disease.fit, newdata=split.test1,
+                    type="prob")
+results3p.df = t(as.data.frame(results3p))
+library(AUC)
+roc_result3 = roc(results3p.df[,2],split.test1$diagnosis)
+plot(roc_result3, main=paste("AUC = ", auc(roc_result3), sep=" ")) # High AUC score, which means the model is predicting well. 
+```
+
+
+```{r}
+tree_confmat
+```
+
+```{r}
+TP_DT=tree_confmat["M","M"]
+TN_DT=tree_confmat["B","B"]
+FP_DT=tree_confmat["B","M"]
+FN_DT=tree_confmat["M","B"]
+accuracy=(TP_DT+TN_DT)/sum(TP_DT,TN_DT,FP_DT,FN_DT)
+accuracy
+```
+
+```{r}
+precision=TP_DT/(TP_DT+FP_DT)
+precision
+```
+
+```{r}
+Recall_DT=TN_DT/(TN_DT+FP_DT)
+Recall_DT
+```
+
+
+
+#When max parameter is not chosen, it is default: so nodes are expanded until all leaves are pure. In this condition, the AUC is 0.91463. There is no overfitting in the model when the maxdepth setting gives the same answer as AUC with no default maxdepth settings. I will use this logic to find the maxdepth value at which there is no overfitting.  
+
+##7. Change the max_depth parameter and calculate your accuracy, precision, and recall for each depth. At which point do you think you have the least amount of over-fitting?
+
+When  the AUC of test using the same test dataset as training set, and the AUC using different data for training and testing are very close, the model is not over-fitting.
+
+
+So, first, let's find the AUC using cancer dataset both as training and test, without splitting. 
+Note: In in lecture notes, Manny calculated the AUC using same dataset for training and testing with max depth parameter= 2, and then compared the AUC to a model in which the test and training set are separated, amd maxdepth=2. If the AUC is similar under both conditions, there is no overfitting in the data. I have used a similar principle. 
+
+```{r}
+Disease_Cancer<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=cancer_data,  controls = ctree_control(maxdepth = 2))
+plot(Disease_Cancer)
+```
+
+
+
+
+```{r}
+resultsr = predict(Disease_Cancer,
+                    type="response")
+resultsp = predict(Disease_Cancer,
+                    type="prob")
+resultsp.df1 = t(as.data.frame(resultsp))
+roc_result = roc(resultsp.df1[,2],cancer_data$diagnosis)
+plot(roc_result, main=paste("AUC = ", auc(roc_result), sep=" "))
+```
+
+
+
+
+##When maxdepth =1
+
+```{r}
+Disease.fit1<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 1))
+plot(Disease.fit1)
+```
+
+
+
+
+```{r}
+results3r1 = predict(Disease.fit1, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat1<-table(split.test1[,"diagnosis"],results3r1,dnn=c("actual","predicted"))
+results3p1 = predict(Disease.fit1, newdata=split.test1,
+                    type="prob")
+results3p.df1 = t(as.data.frame(results3p1))
+roc_result31 = roc(results3p.df1[,2],split.test1$diagnosis)
+plot(roc_result31, main=paste("AUC = ", auc(roc_result31), sep=" "))
+```
+
+
+## 0.83 AUC score is not that great 
+
+```{r}
+tree_confmat1
+```
+
+
+
+```{r}
+TP_DT1=tree_confmat1["M","M"]
+TN_DT1=tree_confmat1["B","B"]
+FP_DT1=tree_confmat1["B","M"]
+FN_DT1=tree_confmat1["M","B"]
+accuracy1=(TP_DT1+TN_DT1)/sum(TP_DT1,TN_DT1,FP_DT1,FN_DT1)
+accuracy1
+```
+
+
+
+
+```{r}
+precision1=TP_DT1/(TP_DT1+FP_DT1)
+precision1
+```
+
+```{r}
+Recall_DT1=TP_DT1/(TP_DT1+FN_DT1)
+Recall_DT1
+```
+
+
+
+##When maxdepth =2
+
+```{r}
+Disease.fit2<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 2))
+plot(Disease.fit2)
+```
+
+```{r}
+results3r2 = predict(Disease.fit2, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat2<-table(split.test1[,"diagnosis"],results3r2,dnn=c("actual","predicted"))
+results3p2 = predict(Disease.fit2, newdata=split.test1,
+                    type="prob")
+results3p.df2 = t(as.data.frame(results3p2))
+roc_result32 = roc(results3p.df2[,2],split.test1$diagnosis)
+plot(roc_result32, main=paste("AUC = ", auc(roc_result32), sep=" "))
+```
+## slightly better AUC when maxdepth=2
+
+
+```{r}
+tree_confmat2
+```
+
+
+
+```{r}
+TP_DT2=tree_confmat2["M","M"]
+TN_DT2=tree_confmat2["B","B"]
+FP_DT2=tree_confmat2["B","M"]
+FN_DT2=tree_confmat2["M","B"]
+accuracy2=(TP_DT2+TN_DT2)/sum(TP_DT2,TN_DT2,FP_DT2,FN_DT2)
+accuracy2
+```
+```{r}
+TN_DT2
+```
+
+
+
+```{r}
+precision2=TP_DT2/(TP_DT2+FP_DT2)
+precision2
+```
+
+
+
+```{r}
+Recall_DT2=TP_DT2/(TP_DT2+FN_DT2)
+Recall_DT2
+```
+
+
+##similar accuracy, recall and precision scores at maxdepth 1 and 2 
+
+
+
+##When maxdepth =3
+
+```{r}
+Disease.fit3<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 3))
+plot(Disease.fit3)
+```
+
+```{r}
+results3r3 = predict(Disease.fit3, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat3<-table(split.test1[,"diagnosis"],results3r3,dnn=c("actual","predicted"))
+results3p3 = predict(Disease.fit3, newdata=split.test1,
+                    type="prob")
+results3p.df3 = t(as.data.frame(results3p3))
+roc_result33 = roc(results3p.df3[,2],split.test1$diagnosis)
+plot(roc_result33, main=paste("AUC = ", auc(roc_result33), sep=" "))
+```
+
+## AUC score is similar to AUC score with no maxdepth setting in Question 6. 
+
+```{r}
+tree_confmat3
+```
+
+
+
+```{r}
+TP_DT3=tree_confmat3["M","M"]
+TN_DT3=tree_confmat3["B","B"]
+FP_DT3=tree_confmat3["B","M"]
+FN_DT3=tree_confmat3["M","B"]
+accuracy3=(TP_DT3+TN_DT3)/sum(TP_DT3,TN_DT3,FP_DT3,FN_DT3)
+accuracy3
+```
+
+```{r}
+precision3=TP_DT3/(TP_DT3+FP_DT3)
+precision3
+```
+
+
+
+```{r}
+Recall_DT3=TP_DT3/(TP_DT2+FN_DT2)
+Recall_DT2
+```
+
+
+
+##When maxdepth =4
+
+```{r}
+Disease.fit4<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 4))
+plot(Disease.fit4)
+```
+
+```{r}
+results3r4 = predict(Disease.fit4, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat4<-table(split.test1[,"diagnosis"],results3r4,dnn=c("actual","predicted"))
+results3p4 = predict(Disease.fit4, newdata=split.test1,
+                    type="prob")
+results3p.df4 = t(as.data.frame(results3p4))
+roc_result34 = roc(results3p.df4[,2],split.test1$diagnosis)
+plot(roc_result34, main=paste("AUC = ", auc(roc_result34), sep=" "))
+```
+
+
+
+```{r}
+tree_confmat4
+```
+
+
+
+```{r}
+TP_DT4=tree_confmat4["M","M"]
+TN_DT4=tree_confmat4["B","B"]
+FP_DT4=tree_confmat4["B","M"]
+FN_DT4=tree_confmat4["M","B"]
+accuracy4=(TP_DT4+TN_DT4)/sum(TP_DT4,TN_DT4,FP_DT4,FN_DT4)
+accuracy4
+```
+
+```{r}
+precision4=TP_DT4/(TP_DT4+FP_DT4)
+precision4
+```
+
+
+
+```{r}
+Recall_DT4=TP_DT4/(TP_DT4+FN_DT4)
+Recall_DT4
+```
+
+## at maxdepth=4, AUC score remains same ar maxdepth= 3, but recall and precision values improve 
+
+##When maxdepth =5
+
+```{r}
+Disease.fit5<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 5))
+plot(Disease.fit5)
+```
+
+```{r}
+results3r5= predict(Disease.fit5, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat5<-table(split.test1[,"diagnosis"],results3r5,dnn=c("actual","predicted"))
+results3p5 = predict(Disease.fit5, newdata=split.test1,
+                    type="prob")
+results3p.df5 = t(as.data.frame(results3p5))
+roc_result35 = roc(results3p.df5[,2],split.test1$diagnosis)
+plot(roc_result35, main=paste("AUC = ", auc(roc_result35), sep=" "))
+```
+
+
+
+```{r}
+tree_confmat5
+```
+
+
+
+```{r}
+TP_DT5=tree_confmat5["M","M"]
+TN_DT5=tree_confmat5["B","B"]
+FP_DT5=tree_confmat5["B","M"]
+FN_DT5=tree_confmat5["M","B"]
+accuracy5=(TP_DT5+TN_DT5)/sum(TP_DT5,TN_DT5,FP_DT5,FN_DT5)
+accuracy5
+```
+
+```{r}
+precision5=TP_DT5/(TP_DT5+FP_DT5)
+precision5
+```
+
+
+
+```{r}
+Recall_DT5=TP_DT5/(TP_DT5+FN_DT5)
+Recall_DT5
+```
+
+## AUC and accuracy scores remain the same as maxdepth =4 
+
+
+
+##When maxdepth =6
+
+```{r}
+Disease.fit6<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 6))
+plot(Disease.fit6)
+```
+
+```{r}
+results3r6 = predict(Disease.fit6, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat6<-table(split.test1[,"diagnosis"],results3r6,dnn=c("actual","predicted"))
+results3p6= predict(Disease.fit6, newdata=split.test1,
+                    type="prob")
+results3p.df6 = t(as.data.frame(results3p6))
+roc_result36 = roc(results3p.df1[,2],split.test1$diagnosis)
+plot(roc_result36, main=paste("AUC = ", auc(roc_result36), sep=" "))
+```
+
+
+
+```{r}
+tree_confmat6
+```
+
+
+
+```{r}
+TP_DT6=tree_confmat6["M","M"]
+TN_DT6=tree_confmat6["B","B"]
+FP_DT6=tree_confmat6["B","M"]
+FN_DT6=tree_confmat6["M","B"]
+accuracy6=(TP_DT6+TN_DT6)/sum(TP_DT6,TN_DT6,FP_DT6,FN_DT6)
+accuracy6
+```
+
+```{r}
+precision6=TP_DT6/(TP_DT6+FP_DT6)
+precision6
+```
+
+
+
+```{r}
+Recall_DT6=TP_DT6/(TP_DT6+FN_DT6)
+Recall_DT6
+```
+
+
+
+##When maxdepth =7
+
+```{r}
+Disease.fit7<-ctree(formula= diagnosis~ radius_mean+texture_mean+smoothness_mean+ compactness_mean,data=split.train1,
+                   controls = ctree_control(maxdepth = 7))
+plot(Disease.fit7)
+```
+
+```{r}
+results3r7 = predict(Disease.fit7, 
+                    newdata=split.test1,
+                    type="response")
+tree_confmat7<-table(split.test1[,"diagnosis"],results3r7,dnn=c("actual","predicted"))
+results3p7 = predict(Disease.fit7, newdata=split.test1,
+                    type="prob")
+results3p.df7 = t(as.data.frame(results3p7))
+roc_result37 = roc(results3p.df7[,2],split.test1$diagnosis)
+plot(roc_result37, main=paste("AUC = ", auc(roc_result37), sep=" "))
+```
+
+
+
+```{r}
+tree_confmat7
+```
+
+
+
+```{r}
+TP_DT7=tree_confmat7["M","M"]
+TN_DT7=tree_confmat7["B","B"]
+FP_DT7=tree_confmat7["B","M"]
+FN_DT7=tree_confmat7["M","B"]
+accuracy7=(TP_DT7+TN_DT7)/sum(TP_DT7,TN_DT7,FP_DT7,FN_DT7)
+accuracy7
+```
+
+```{r}
+precision7=TP_DT7/(TP_DT7+FP_DT7)
+precision7
+```
+
+
+
+```{r}
+Recall_DT7=TP_DT7/(TP_DT7+FN_DT7)
+Recall_DT7
+```
+
+
+
+
+#Conclusion for Question 7: At maxdepth =4, there is the least amount of overfitting. maxdepth=5 brings no improvement and maxdepth= 6 has a lower AUC score than maxdepth= 5. 

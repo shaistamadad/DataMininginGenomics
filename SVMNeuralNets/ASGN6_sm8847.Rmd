@@ -1,0 +1,469 @@
+---
+title: "BDBM Assignment 6"
+author: "shaistamadad"
+date: "4/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Setting seed option after every sampling to get consistent results
+
+
+
+```{r}
+library(e1071)  #need this library for svm modelling 
+library(readr)
+library(AUC) # to make AUC cruves 
+all_cancer_data <- read_csv("data.csv",col_names = TRUE) 
+cancer_data = all_cancer_data[,c("radius_mean", "texture_mean", "smoothness_mean", "compactness_mean", "diagnosis")]
+cancer_data$diagnosis = as.factor(cancer_data$diagnosis)
+
+```
+
+```{r}
+table(cancer_data[,"diagnosis"])  # more benign, this will bring a bias in the model 
+```
+
+
+```{r}
+set.seed(1)
+allMalignant<-cancer_data[which(cancer_data[,"diagnosis"] == 'M'),] # choose all the data with maligant diagnosis 
+allBenign<-cancer_data[which(cancer_data[,"diagnosis"] == 'B'),]   # choose all the data with benign diagnosis 
+sample(1:nrow(allBenign), nrow(allMalignant))->rand.0  # sample from the benign vector number of variables = 212, which is the number of malignant data points 
+allBenign[rand.0,]->benign  # 212 benign data points
+allMalignant -> malignant  #212 malignant points 
+```
+
+
+#########
+
+```{r}
+set.seed(2)
+training.malignant<-sample(nrow(allMalignant), floor(nrow(allMalignant) * 0.8), replace = FALSE) #choose 80 percent of the 212 malignant malignant points
+set.seed(3)
+training.benign= sample(nrow(benign), floor(nrow(benign) * 0.8), replace = FALSE) #choose 80 percent of the 212 malignant malignant points
+training_set_balanced_malignant<-allMalignant[training.malignant,] # 80 percent allMalignant for training set 
+test_set_balanced_malignant<-allMalignant[-training.malignant,] # 20 percent chosen as test dataset 
+
+training_set_balanced_benign<-allBenign[training.benign,] # 80 percent allBenign for training set 
+test_set_balanced_benign<-benign[-training.benign,] # 20 percent chosen as test dataset 
+```
+
+# BALANCED TRAINING AND TEST DATASETS
+
+```{r}
+training_set_balanced= rbind(training_set_balanced_malignant, training_set_balanced_benign)
+test_set_balanced= rbind(test_set_balanced_malignant, test_set_balanced_benign)
+```
+
+
+
+
+
+```{r}
+table(training_set_balanced[,"diagnosis"])  # equal ratio of benign and malignant in test dataset 
+```
+
+
+
+
+```{r}
+table(test_set_balanced[,"diagnosis"]) # equal proportion of benign and malignant in training dataset
+```
+
+
+############
+
+```{r}
+str(test_set_balanced)
+```
+
+
+
+
+```{r}
+str(training_set_balanced)
+```
+
+
+
+
+
+
+## Function to calcuate the best model for different values of c
+
+I used the tune.svm function to get the best model and calculate the auc for the best model 
+
+
+```{r}
+set.seed(44)
+
+SVM_AUC <- function(training_set_balanced, test_set_balanced){
+
+
+
+svm <- tune.svm(diagnosis~radius_mean +texture_mean+smoothness_mean+compactness_mean, data = training_set_balanced, kernal = "linear",cost=seq(from=0.1, to=20,by=0.1), probability = T)
+print(svm$best.model) # the best model from costs 0.1 to 20 
+
+svm.prob <- predict(svm$best.model, test_set_balanced[,1:4],probability=T)
+#print(svm.prob)
+prob <- attr(svm.prob,"probabilities")[,"M"]
+return(auc(roc(prob, test_set_balanced$diagnosis)))
+}
+
+
+SVM_AUC(training_set_balanced= training_set_balanced , test_set_balanced = test_set_balanced)
+
+
+```
+
+##Using the tune.svm, I get the best model at cost=   0.8  , and my auc for test data id 0.9745809. HOwever, the tune.svm also changes the kernel from linear to radial. I am not sure if this assignment wants us to keep the kernel alway set at linear. If that's the case, please consider the function I wrote below testing different values of c while keeping the kernel= linear.  
+
+
+
+## 
+
+
+```{r}
+set.seed(000)
+SVM_Function= function(n){
+  out<-matrix(data=NA, nrow = 4, ncol = n)
+  rownames(out)<-c("sensitive:","specificity:","precision:","accuracy:")
+  for (i in 1:n){
+    data.svm = svm(diagnosis ~  radius_mean +texture_mean+smoothness_mean+compactness_mean,
+            data = training_set_balanced, kernel="linear", cost=i, 
+            probability=T,scale = FALSE)
+    data.svm.pred.prob = predict(data.svm, test_set_balanced, 
+                             probability=T)
+tableA= table(data.svm.pred.prob,test_set_balanced$diagnosis)
+data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+ TP=tableA["M","M"]
+  TN=tableA["B","B"]
+  FP=tableA["B","M"]
+  FN=tableA["M","B"]
+  TPR=(TP)/(TP+FN)
+  TNR=(TN)/(TN+FP)
+  PPV=(TP)/(TP+FP)
+  ACC=(TP+TN)/(TP+TN+FP+FN)
+  #c("sensitive:","specificity:","precision:","accuracy:")
+  out[,i]=c(TPR,TNR,PPV,ACC)
+  #rownames(out)<-c("sensitive:","specificity:","precision:","accuracy:")
+  #c(TPR,TNR,PPV,ACC)
+  }
+  return(out)
+}
+```
+
+
+
+```{r}
+set.seed(1234)
+SVM_Function(20)  # the sensitivity, specificity, accuracy and precision scores for models with costs changing from 1 to 20
+```
+
+However, fairly similar  scores for most models, these scores are not reliable to calculate the best model. 
+
+
+## A function to get auc scores for testset predictions, using training set to train a model for different values of c 
+
+```{r}
+SVM_AUC= function(n){
+  out<-matrix(data=NA, nrow = 1, ncol = n)  # matrix to be filled with auc scores 
+  rownames(out)<-c("AUC")
+  for (i in 1:n){
+    data.svm = svm(diagnosis ~  radius_mean +texture_mean+smoothness_mean+compactness_mean,
+            data = training_set_balanced, kernel="linear", cost=i, 
+            probability=T)
+    data.svm.pred.prob = predict(data.svm, test_set_balanced, 
+                             probability=T)
+    data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+    datasvmroc = roc(predictions = data.svm.pred.prob.mat[,1], test_set_balanced$diagnosis)
+    out[,i]=auc(datasvmroc)
+  }
+  return(out)
+}
+```
+
+##AUC scores for c= 1 to c=20 using the test set data
+
+
+```{r}
+set.seed(12345)
+SVM_AUC(20)
+```
+
+
+## Based on this information, I will say my best model has c= 1  0.9789075 , given kernel= linear, as after c=4, the auc value stays the same till c=4 and then decreases slightly and stays there.  
+
+
+
+
+
+
+## In case we were meant to use the auc values using the training dataset to evaluate the performance of the model, please consider this. 
+
+
+
+```{r}
+SVM_AUC_Training_Set= function(n){
+  out<-matrix(data=NA, nrow = 1, ncol = n)  # matrix to be filled with auc scores 
+  rownames(out)<-c("AUC")
+  for (i in 1:n){
+    data.svm = svm(diagnosis ~  radius_mean +texture_mean+smoothness_mean+compactness_mean,
+            data = training_set_balanced, kernel="linear", cost=i, 
+            probability=T)
+    data.svm.pred.prob = predict(data.svm, training_set_balanced, 
+                             probability=T)
+    data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+    datasvmroc = roc(predictions = data.svm.pred.prob.mat[,1], training_set_balanced$diagnosis)
+    out[,i]=auc(datasvmroc)
+  }
+  return(out)
+}
+```
+
+
+```{r}
+set.seed(111)
+SVM_AUC_Training_Set(20)
+```
+
+## I think even if I used the auc scores using the training set, the c=1 gives the best auc score ( 0.9897763) and after that, auc score decreases slightly at c= 3 and stays constant.so I will say the best model is at c=1 if kernel is linear
+
+
+
+## AUC plot for the best model c=1 when kernel= linear 
+
+
+```{r}
+set.seed(29)
+data.svm = svm(diagnosis ~  radius_mean +texture_mean+smoothness_mean+compactness_mean,
+            data = training_set_balanced, kernel="linear", cost=1, 
+            probability=T)
+```
+
+
+```{r}
+plot(data.svm, training_set_balanced,  radius_mean~smoothness_mean)
+```
+
+
+
+
+#Testing the model
+
+
+```{r}
+data.svm.pred.prob = predict(data.svm, newdata=test_set_balanced, 
+                             probability=T)
+table(data.svm.pred.prob,test_set_balanced$diagnosis)
+```
+
+
+
+
+
+
+```{r}
+data.svm.pred.prob.mat = attr(data.svm.pred.prob, "probabilities")
+```
+
+
+The probabilities are stored as an attribute in the results. You can retrieve it using the attr function.
+
+```{r}
+head(data.svm.pred.prob.mat) # first column are theprobabilities for maligant 
+```
+
+
+```{r}
+datasvmroc = roc(predictions = data.svm.pred.prob.mat[,1], test_set_balanced$diagnosis)
+auc_result=auc(datasvmroc)  # I need the prediction probabilities for maligant diagnosis
+plot(datasvmroc,main=paste("AUC = ", auc(datasvmroc), sep=" "))
+```
+
+
+#Neural Network
+## Scale Data 
+
+```{r}
+all_cancer_data1 <- read_csv("data.csv",col_names = TRUE) 
+cancer_data1 = all_cancer_data1[,c("radius_mean", "texture_mean", "smoothness_mean", "compactness_mean", "diagnosis")]
+cancer_data1$diagnosis = as.factor(cancer_data1$diagnosis)
+
+```
+```{r}
+maxs = apply(cancer_data1[,1:4], 2, max)
+mins = apply(cancer_data1[,1:4], 2, min)
+```
+
+```{r}
+scaled.data = as.data.frame(scale(cancer_data1[,1:4],
+                                  center=mins,
+                                  scale = maxs-mins))
+
+diagnosis = as.numeric(cancer_data1$diagnosis)-1
+
+scaled.data.df = cbind(diagnosis,scaled.data)
+```
+
+
+
+
+
+```{r}
+set.seed(7666) # setting seed after every sampling to get consistent results 
+allMalignant1<-scaled.data.df[which(scaled.data.df[,"diagnosis"] == "1"),] # choose all the data with maligant diagnosis 
+set.seed(7888)
+allBenign1<-scaled.data.df[which(scaled.data.df[,"diagnosis"] == "0"),]   # choose all the data with benign diagnosis 
+set.seed(888)
+sample(1:nrow(allBenign1), nrow(allMalignant1))->rand.01  # sample from the benign vector number of variables = 212, which is the number of malignant data points 
+allBenign1[rand.01,]->benign1  # 212 benign data points
+allMalignant1 -> malignant1 #212 malignant points 
+```
+
+ 
+#########
+
+```{r}
+set.seed(25)
+training.malignant1<-sample(nrow(allMalignant1), floor(nrow(allMalignant1) * 0.8), replace = FALSE) #choose 80 percent of the 212 malignant malignant points
+set.seed(26)
+training.benign1= sample(nrow(benign1), floor(nrow(benign1) * 0.8), replace = FALSE) #choose 80 percent of the 212 malignant malignant points
+training_set_balanced_malignant1<-allMalignant1[training.malignant1,] # 80 percent allMalignant for training set 
+test_set_balanced_malignant1<-allMalignant1[-training.malignant1,] # 20 percent chosen as test dataset 
+
+training_set_balanced_benign1<-allBenign1[training.benign1,] # 80 percent allBenign for training set 
+test_set_balanced_benign1<-benign1[-training.benign1,] # 20 percent chosen as test dataset 
+```
+
+# BALANCED TRAINING AND TEST DATASETS
+
+```{r}
+training_set_balanced1= rbind(training_set_balanced_malignant1, training_set_balanced_benign1)
+test_set_balanced1= rbind(test_set_balanced_malignant1, test_set_balanced_benign1)
+```
+
+
+
+
+
+```{r}
+table(training_set_balanced1[,"diagnosis"])  # equal ratio of benign and malignant in test dataset 
+```
+
+
+```{r}
+table(test_set_balanced1[,"diagnosis"])
+```
+
+
+
+
+
+
+
+```{r}
+set.seed(2222)
+library("neuralnet")
+
+get_NN_AUC <- function(n){
+
+#training_set_balanced1$diagnosis= as.factor(training_set_balanced1$diagnosis)
+#test_set_balanced1$diagnosis= as.factor(test_set_balanced1$diagnosis)
+
+  
+data.nn = neuralnet(diagnosis~ radius_mean +texture_mean+smoothness_mean+compactness_mean, data=training_set_balanced1, hidden=c(n), rep=1, linear.output = F)
+data.nn.results =compute(data.nn, test_set_balanced1[,2:5])
+#print()
+#training_set_balanced$diagnosis <- ifelse(training_set_balanced$diagnosis =="M",1,0)
+#test_set_balanced$diagnosis= ifelse(test_set_balanced$diagnosis =="M",1,0)
+data.nn.roc = roc(data.nn.results$net.result,as.factor(test_set_balanced1$diagnosis))
+
+return(auc(data.nn.roc))
+}
+
+get_NN_AUC(1)
+get_NN_AUC(10)
+get_NN_AUC(20)
+
+```
+
+
+
+
+```{r}
+set.seed(777)
+out= matrix( nrow=1, ncol=30)
+for (i in c(1:30)){
+  rownames(out)= c("AUC")
+  colnames(out)= c(1:30) 
+  #auc= get_NN_AUC(i)
+out[,i]= get_NN_AUC(i)
+}
+```
+
+
+```{r}
+out
+```
+
+## So the highest auc score is when the size of layers is 1(0.9853975)
+
+
+
+
+
+## AUC plot when layers= 1
+
+```{r}
+set.seed(77)
+data.nn = neuralnet(diagnosis~., data=training_set_balanced1, hidden=1, rep=1, linear.output = F)
+data.nn.results =neuralnet::compute(data.nn, test_set_balanced1[,2:5])
+
+data.nn.roc = roc(data.nn.results$net.result,
+                  as.factor(test_set_balanced1$diagnosis))
+plot(data.nn.roc,main=paste("AUC = ", auc(data.nn.roc), sep=" "))
+```
+
+```{r}
+plot(data.nn)
+```
+
+
+##AUC plot when layer= 10
+
+
+
+```{r}
+set.seed(00)
+data.nn = neuralnet(diagnosis~., data=training_set_balanced1, hidden=10, rep=1, linear.output = F)
+data.nn.results =neuralnet::compute(data.nn, test_set_balanced1[,2:5])
+
+data.nn.roc = roc(data.nn.results$net.result,
+                  as.factor(test_set_balanced1$diagnosis))
+plot(data.nn.roc,main=paste("AUC = ", auc(data.nn.roc), sep=" "))
+```
+
+##AUC plot when layer= 20
+
+
+
+```{r}
+set.seed(8)
+data.nn = neuralnet(diagnosis~., data=training_set_balanced1, hidden=20, rep=1, linear.output = F)
+data.nn.results =neuralnet::compute(data.nn, test_set_balanced1[,2:5])
+
+data.nn.roc = roc(data.nn.results$net.result,
+                  as.factor(test_set_balanced1$diagnosis))
+plot(data.nn.roc,main=paste("AUC = ", auc(data.nn.roc), sep=" "))
+```
+
+
+
+
+## In conclusion , the best model is at size = 1 AUC= 0.98539751216874
